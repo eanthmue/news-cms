@@ -8,15 +8,29 @@ export const authConfig = {
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;
       const isAdminRoute = nextUrl.pathname.startsWith("/admin");
-      const isAuthPage = nextUrl.pathname.startsWith("/admin/login");
 
-      if (isAdminRoute && !isAuthPage) {
-        if (isLoggedIn) return true;
-        return false; // Redirect to login
-      } else if (isAuthPage && isLoggedIn) {
-        return Response.redirect(new URL("/admin/dashboard", nextUrl));
+      // Define public auth routes that don't require session
+      const publicAuthRoutes = [
+        "/admin/login",
+        "/admin/forgot-password",
+        "/admin/reset-password",
+        "/admin/accept-invitation",
+      ];
+
+      const isPublicAuthRoute = publicAuthRoutes.some(route =>
+        nextUrl.pathname.startsWith(route)
+      );
+
+      if (!isAdminRoute) return true;
+
+      if (isPublicAuthRoute) {
+        if (isLoggedIn) {
+          return Response.redirect(new URL("/admin/dashboard", nextUrl));
+        }
+        return true;
       }
-      return true;
+
+      return isLoggedIn;
     },
     async jwt({ token, user }) {
       if (user) {
@@ -28,7 +42,7 @@ export const authConfig = {
     async session({ session, token }) {
       if (session.user) {
         session.user.role = token.role;
-        session.user.id = token.id;
+        session.user.id = token.id as string;
       }
       return session;
     },
