@@ -1,0 +1,24 @@
+FROM node:22-alpine
+
+RUN apk add --no-cache libc6-compat
+WORKDIR /app
+
+# Install pnpm
+RUN npm install -g pnpm@9
+
+# Copy config and package files
+COPY .npmrc package.json pnpm-lock.yaml* ./
+COPY prisma ./prisma/
+
+RUN pnpm install
+
+# We don't copy the whole source code here because we'll mount it via volumes
+# But we generate prisma client
+RUN pnpm exec prisma generate
+
+EXPOSE 3000
+
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
+
+CMD ["pnpm", "run", "dev"]

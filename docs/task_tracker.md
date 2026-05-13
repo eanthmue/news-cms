@@ -16,7 +16,7 @@ This tracker monitors the progress of the News Website and CMS project. Each tas
 - [x] **T001**: Initialize Next.js Project (TS, Tailwind) `docs/tasks/T001-init-project.md`
 - [x] **T019**: Testing Infrastructure Setup `docs/tasks/T019-testing-setup.md`
 - [x] **T002**: Database Setup & Schema Design `docs/tasks/T002-db-setup.md`
-- [ ] **T003**: Folder Structure & Base Components `docs/tasks/T003-base-structure.md`
+- [x] **T003**: Folder Structure & Base Components `docs/tasks/T003-base-structure.md`
 
 ## Phase 2: Authentication & Security
 

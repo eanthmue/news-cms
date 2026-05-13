@@ -43,13 +43,13 @@ export default function Home() {
           height={20}
           priority
         />
-        
+
         <div className="mb-12 flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
           <h1 className="text-4xl font-bold tracking-tight text-black dark:text-zinc-50">
             Latest News
           </h1>
           <p className="max-w-md text-lg text-zinc-600 dark:text-zinc-400">
-            Welcome to our News CMS. This content is fetched client-side via our Backend API.
+            Welcome to our News CMS1. This content is fetched client-side via our Backend API.
           </p>
         </div>
 
