@@ -16,8 +16,6 @@ Set up a secure authentication system for the admin CMS.
 - Use `bcrypt` (or Argon2) for secure password hashing and verification.
 - Create a Login page at `/admin/login`.
 - Implement a secure password reset flow (forgot password via email, token generation/validation).
-- Create an admin invitation flow (admin invites via email, new user sets up password via token).
-- Implement email verification for newly invited admins.
 
 ### Access Control & Session
 - Implement Role-Based Access Control (RBAC) in the `AdminUser` model (e.g., SUPER_ADMIN, EDITOR) and include the role claim in the JWT.
@@ -42,6 +40,5 @@ Set up a secure authentication system for the admin CMS.
 3. Navigate to `/admin/login` and login successfully. Verify redirect to `/admin/dashboard`.
 4. Verify that accessing a restricted admin route without a valid session or sufficient role redirects to login or shows a 403 error.
 5. Test the "Forgot Password" flow to ensure an email is sent (or logged) and the reset token securely updates the password.
-6. Test the "Admin Invite" flow by inviting a new user and verifying they can set their password and log in with the correct role.
-7. Check the database to verify that audit logs are correctly generated for login attempts and password changes.
+6. Check the database to verify that audit logs are correctly generated for login attempts and password changes.
 8. Verify that clicking "Logout" terminates the session and redirects to the login page.

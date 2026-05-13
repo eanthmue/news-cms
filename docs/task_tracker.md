@@ -22,6 +22,7 @@ This tracker monitors the progress of the News Website and CMS project. Each tas
 
 - [ ] **T004**: Admin Login Implementation `docs/tasks/T004-admin-auth.md`
 - [ ] **T005**: Protected Admin Routes Middleware `docs/tasks/T005-auth-middleware.md`
+- [x] **T020**: Admin User Management `docs/tasks/T020-admin-user-mgmt.md`
 
 ## Phase 3: CMS Content Management
 
