@@ -23,7 +23,7 @@ describe('LoginForm', () => {
     vi.mocked(useRouter).mockReturnValue({
       push: mockPush,
       refresh: mockRefresh,
-    } as any);
+    } as unknown as ReturnType<typeof useRouter>);
   });
 
   it('renders login form correctly', () => {
@@ -69,7 +69,7 @@ describe('LoginForm', () => {
   });
 
   it('shows error message on failed submission', async () => {
-    vi.mocked(signIn).mockResolvedValue({ error: 'Invalid credentials', ok: false, status: 401, url: null });
+    vi.mocked(signIn).mockResolvedValue({ error: 'Invalid credentials', ok: false, status: 401, url: '' });
 
     render(<LoginForm />);
 
@@ -85,7 +85,7 @@ describe('LoginForm', () => {
 
   it('shows loading state during submission', async () => {
     // Mock signIn to be slow
-    vi.mocked(signIn).mockImplementation(() => new Promise((resolve) => setTimeout(() => resolve({ error: null } as any), 100)));
+    vi.mocked(signIn).mockImplementation(() => new Promise((resolve) => setTimeout(() => resolve({ error: null, ok: true, status: 200, url: '' }), 100)));
 
     render(<LoginForm />);
 

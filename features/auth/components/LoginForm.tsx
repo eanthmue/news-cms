@@ -32,7 +32,7 @@ export function LoginForm() {
         router.push("/admin/dashboard");
         router.refresh();
       }
-    } catch (err: unknown) {
+    } catch {
       setError("An unexpected error occurred.");
     } finally {
       setIsLoading(false);

@@ -29,7 +29,7 @@ export default function ForgotPasswordPage() {
       } else {
         setError(data.error);
       }
-    } catch (err) {
+    } catch {
       setError("An unexpected error occurred.");
     } finally {
       setIsLoading(false);

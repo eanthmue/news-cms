@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { AuthService } from '@/features/auth/services/auth-service';
 import { prisma } from '@/lib/prisma';
+import { AdminUser } from '@prisma/client';
 import bcrypt from 'bcryptjs';
-import crypto from 'crypto';
 import { createAuditLog } from '@/lib/audit-log';
 
 // Mock dependencies
@@ -50,7 +50,7 @@ describe('AuthService', () => {
         id: '1',
         email: 'test@example.com',
         isActive: false,
-      } as any);
+      } as unknown as AdminUser);
 
       await expect(AuthService.validateCredentials('test@example.com', 'password'))
         .rejects.toThrow('Invalid credentials or account issue.');
@@ -68,7 +68,7 @@ describe('AuthService', () => {
         email: 'test@example.com',
         isActive: true,
         lockoutUntil: futureDate,
-      } as any);
+      } as unknown as AdminUser);
 
       await expect(AuthService.validateCredentials('test@example.com', 'password'))
         .rejects.toThrow('Invalid credentials or account issue.');
@@ -87,7 +87,7 @@ describe('AuthService', () => {
         password: 'hashed_password',
         failedLoginAttempts: 4,
         lockoutUntil: null,
-      } as any);
+      } as unknown as AdminUser);
 
       vi.mocked(bcrypt.compare).mockResolvedValue(false);
 
@@ -118,7 +118,7 @@ describe('AuthService', () => {
         password: 'hashed_password',
         failedLoginAttempts: 0,
         lockoutUntil: null,
-      } as any);
+      } as unknown as AdminUser);
 
       vi.mocked(bcrypt.compare).mockResolvedValue(true);
 
@@ -149,7 +149,7 @@ describe('AuthService', () => {
 
   describe('generateInvitationToken', () => {
     it('should generate a token and update user', async () => {
-      vi.mocked(prisma.adminUser.update).mockResolvedValue({ id: '1' } as any);
+      vi.mocked(prisma.adminUser.update).mockResolvedValue({ id: '1' } as unknown as AdminUser);
 
       const token = await AuthService.generateInvitationToken('test@example.com', 'admin-1');
 
@@ -180,8 +180,8 @@ describe('AuthService', () => {
     });
 
     it('should generate a token and update user', async () => {
-      vi.mocked(prisma.adminUser.findUnique).mockResolvedValue({ id: '1', email: 'test@example.com' } as any);
-      vi.mocked(prisma.adminUser.update).mockResolvedValue({ id: '1' } as any);
+      vi.mocked(prisma.adminUser.findUnique).mockResolvedValue({ id: '1', email: 'test@example.com' } as unknown as AdminUser);
+      vi.mocked(prisma.adminUser.update).mockResolvedValue({ id: '1' } as unknown as AdminUser);
 
       const token = await AuthService.generatePasswordResetToken('test@example.com');
 
@@ -210,7 +210,7 @@ describe('AuthService', () => {
     });
 
     it('should update password and clear reset token', async () => {
-      vi.mocked(prisma.adminUser.findFirst).mockResolvedValue({ id: '1' } as any);
+      vi.mocked(prisma.adminUser.findFirst).mockResolvedValue({ id: '1' } as unknown as AdminUser);
       vi.mocked(bcrypt.hash).mockResolvedValue('new-hashed-password');
 
       await AuthService.resetPassword('valid-token', 'new-password');
@@ -240,7 +240,7 @@ describe('AuthService', () => {
     });
 
     it('should update user and activate account', async () => {
-      vi.mocked(prisma.adminUser.findFirst).mockResolvedValue({ id: '1' } as any);
+      vi.mocked(prisma.adminUser.findFirst).mockResolvedValue({ id: '1' } as unknown as AdminUser);
       vi.mocked(bcrypt.hash).mockResolvedValue('hashed-password');
 
       await AuthService.acceptInvitation('valid-token', 'password', 'New User');

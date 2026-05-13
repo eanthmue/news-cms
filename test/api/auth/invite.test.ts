@@ -3,7 +3,7 @@ import { POST } from '@/app/api/auth/invite/route';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { AuthService } from '@/features/auth/services/auth-service';
-import { Role } from '@prisma/client';
+import { Role, AdminUser } from '@prisma/client';
 
 // Mock dependencies
 vi.mock('@/lib/auth', () => ({
@@ -30,7 +30,7 @@ describe('Invite API Route (POST /api/auth/invite)', () => {
     vi.clearAllMocks();
   });
 
-  const createRequest = (body: any) => {
+  const createRequest = (body: Record<string, unknown>) => {
     return new Request('http://localhost:3000/api/auth/invite', {
       method: 'POST',
       body: JSON.stringify(body),
@@ -84,7 +84,7 @@ describe('Invite API Route (POST /api/auth/invite)', () => {
       user: { id: 'admin-1', role: Role.SUPER_ADMIN },
       expires: '',
     });
-    vi.mocked(prisma.adminUser.findUnique).mockResolvedValue({ id: '1' } as any);
+    vi.mocked(prisma.adminUser.findUnique).mockResolvedValue({ id: '1' } as unknown as AdminUser);
 
     const req = createRequest({ email: 'existing@example.com', name: 'Existing User' });
     const response = await POST(req);
@@ -100,7 +100,7 @@ describe('Invite API Route (POST /api/auth/invite)', () => {
       expires: '',
     });
     vi.mocked(prisma.adminUser.findUnique).mockResolvedValue(null);
-    vi.mocked(prisma.adminUser.create).mockResolvedValue({ id: 'new-user-1' } as any);
+    vi.mocked(prisma.adminUser.create).mockResolvedValue({ id: 'new-user-1' } as unknown as AdminUser);
     vi.mocked(AuthService.generateInvitationToken).mockResolvedValue('mock-token');
 
     const req = createRequest({ email: 'new@example.com', name: 'New User', role: 'EDITOR' });
