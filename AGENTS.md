@@ -33,7 +33,7 @@ Follow the structure defined in `T003`:
   - Constants: SCREAMING_SNAKE_CASE.
   - Files/Folders: kebab-case (except for App Router special files).
 - **TypeScript:** Use strict mode. Avoid `any`. Define interfaces for all data models.
-- **Components:** Use functional components and hooks. Prefer server components for data fetching.
+**Component Pattern:** Use Client Components exclusively for UI logic. Every page and component should start with `"use client";` unless there is a specific reason not to (e.g., metadata).
 
 ## Security & Reliability Guardrails
 
