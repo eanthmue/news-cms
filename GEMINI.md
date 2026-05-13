@@ -2,6 +2,10 @@
 
 ## Architecture
 - **Framework:** Next.js (App Router)
+- **Organization:** Vertical Slice Architecture (VSA).
+  - Use a `/features` directory to colocate business logic (components, hooks, types, services) by domain.
+  - Use **Route Groups** in the `/app` directory (e.g., `(admin)`, `(public)`) to organize routes.
+  - Keep `/components/ui` for shared, business-agnostic UI primitives.
 - **Component Pattern:** Use Client Components exclusively for UI logic. Every page and component should start with `"use client";` unless there is a specific reason not to (e.g., metadata).
 - **Backend:** All data fetching and mutations must go through **Route Handlers** (API routes in `app/api/`). Do NOT use Server Components for data fetching or Server Actions unless explicitly requested.
 - **State Management:** Use standard React hooks (useState, useEffect) or specialized libraries like TanStack Query for client-side data fetching.
@@ -14,5 +18,5 @@
 
 ## Coding Standards
 - Use TypeScript for all files.
-- Follow the existing folder structure (`app/`, `components/`, `lib/`, `prisma/`).
+- Follow the Vertical Slice structure (`app/`, `features/`, `components/ui/`, `lib/`, `prisma/`).
 - Ensure all API responses follow a consistent JSON structure.
