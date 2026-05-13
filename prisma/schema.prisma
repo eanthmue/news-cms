@@ -1,0 +1,120 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model AdminUser {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Article {
+  id              String    @id @default(cuid())
+  title           String
+  slug            String    @unique
+  summary         String?
+  bodyContent     String    @db.Text
+  featuredImageId String?
+  featuredImage   Media?    @relation("FeaturedImage", fields: [featuredImageId], references: [id])
+  categoryId      String
+  category        Category  @relation(fields: [categoryId], references: [id])
+  tags            Tag[]     @relation("ArticleTags")
+  authorName      String
+  status          String    @default("Draft") // Draft, Published, Archived
+  publishedAt     DateTime?
+  seoTitle        String?
+  seoDescription  String?
+  ogImageId       String?
+  ogImage         Media?    @relation("OgImage", fields: [ogImageId], references: [id])
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([slug])
+  @@index([categoryId])
+}
+
+model Category {
+  id           String    @id @default(cuid())
+  name         String
+  slug         String    @unique
+  description  String?
+  displayOrder Int       @default(0)
+  isActive     Boolean   @default(true)
+  articles     Article[]
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([slug])
+}
+
+model Tag {
+  id          String    @id @default(cuid())
+  name        String
+  slug        String    @unique
+  description String?
+  articles    Article[] @relation("ArticleTags")
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([slug])
+}
+
+model Media {
+  id               String    @id @default(cuid())
+  fileName         String
+  fileUrl          String
+  fileType         String
+  fileSize         Int
+  altText          String?
+  featuredArticles Article[] @relation("FeaturedImage")
+  ogArticles       Article[] @relation("OgImage")
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+}
+
+model StaticPage {
+  id             String   @id @default(cuid())
+  title          String
+  slug           String   @unique
+  bodyContent    String   @db.Text
+  status         String   @default("Draft") // Draft, Published
+  seoTitle       String?
+  seoDescription String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([slug])
+}
+
+model NavigationMenuItem {
+  id           String  @id @default(cuid())
+  label        String
+  linkType     String // Category, StaticPage, Custom
+  linkValue    String // slug or URL
+  displayOrder Int     @default(0)
+  isActive     Boolean @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model WebsiteSetting {
+  id                    String @id @default(cuid())
+  websiteName           String @default("News CMS")
+  logoUrl               String?
+  faviconUrl            String?
+  defaultSeoTitle       String?
+  defaultSeoDescription String?
+  contactEmail          String?
+  socialLinks           Json? // Array of { platform, url }
+  updatedAt             DateTime @updatedAt
+}
