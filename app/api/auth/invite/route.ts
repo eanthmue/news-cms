@@ -1,0 +1,55 @@
+import { NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+import { AuthService } from "@/features/auth/services/auth-service";
+import { Role } from "@prisma/client";
+import { z } from "zod";
+import crypto from "crypto";
+
+const inviteSchema = z.object({
+  email: z.string().email(),
+  name: z.string().min(1),
+  role: z.nativeEnum(Role).default(Role.EDITOR),
+});
+
+export async function POST(req: Request) {
+  const session = await auth();
+
+  if (!session || session.user.role !== Role.SUPER_ADMIN) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+  }
+
+  try {
+    const body = await req.json();
+    const { email, name, role } = inviteSchema.parse(body);
+
+    const existingUser = await prisma.adminUser.findUnique({ where: { email } });
+    if (existingUser) {
+      return NextResponse.json({ error: "User with this email already exists." }, { status: 400 });
+    }
+
+    // Create user in inactive state
+    await prisma.adminUser.create({
+      data: {
+        email,
+        name,
+        role,
+        password: crypto.randomBytes(32).toString("hex"), // Temporary random password
+        isActive: false,
+      },
+    });
+
+    const token = await AuthService.generateInvitationToken(email, session.user.id);
+
+    // In a real app, send email with token
+    console.log(`Invitation token for ${email}: ${token}`);
+
+    return NextResponse.json({ message: "Invitation sent successfully." });
+  } catch (error: unknown) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json({ error: error.issues }, { status: 400 });
+    }
+    const message = error instanceof Error ? error.message : "An unexpected error occurred.";
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
+}

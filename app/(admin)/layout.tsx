@@ -1,6 +1,8 @@
 'use client';
 
 import React from 'react';
+import { signOut } from "next-auth/react";
+import { Button } from "@/components/ui/button";
 
 export default function AdminLayout({
   children,
@@ -23,7 +25,9 @@ export default function AdminLayout({
         <header className="border-b border-zinc-200 p-4 dark:border-zinc-800">
           <div className="flex items-center justify-between">
             <h1 className="text-xl font-semibold">Dashboard</h1>
-            <div className="h-8 w-8 rounded-full bg-zinc-200 dark:bg-zinc-800" />
+            <Button variant="outline" onClick={() => signOut({ callbackUrl: "/admin/login" })}>
+              Logout
+            </Button>
           </div>
         </header>
         <main className="flex-1 p-6">{children}</main>
