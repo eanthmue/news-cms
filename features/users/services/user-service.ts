@@ -63,6 +63,19 @@ export class UserService {
       }
     }
 
+    // Prevent demoting or deactivating the last active SUPER_ADMIN
+    if (data.role === Role.EDITOR || data.isActive === false) {
+      const userToUpdate = await prisma.adminUser.findUnique({ where: { id } });
+      if (userToUpdate?.role === Role.SUPER_ADMIN && userToUpdate.isActive) {
+        const activeSuperAdminCount = await prisma.adminUser.count({
+          where: { role: Role.SUPER_ADMIN, isActive: true },
+        });
+        if (activeSuperAdminCount <= 1) {
+          throw new Error("Cannot demote or deactivate the last active SUPER_ADMIN.");
+        }
+      }
+    }
+
     const user = await prisma.adminUser.update({
       where: { id },
       data,
@@ -89,6 +102,16 @@ export class UserService {
     const user = await prisma.adminUser.findUnique({ where: { id } });
     if (!user) {
       throw new Error("User not found.");
+    }
+
+    // Prevent deleting the last active SUPER_ADMIN
+    if (user.role === Role.SUPER_ADMIN && user.isActive) {
+      const activeSuperAdminCount = await prisma.adminUser.count({
+        where: { role: Role.SUPER_ADMIN, isActive: true },
+      });
+      if (activeSuperAdminCount <= 1) {
+        throw new Error("Cannot delete the last active SUPER_ADMIN.");
+      }
     }
 
     // Delete user

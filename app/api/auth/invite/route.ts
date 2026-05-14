@@ -42,7 +42,9 @@ export async function POST(req: Request) {
     const token = await AuthService.generateInvitationToken(email, session.user.id);
 
     // In a real app, send email with token
-    console.log(`Invitation token for ${email}: ${token}`);
+    if (process.env.NODE_ENV === "development") {
+      console.log(`Invitation token for ${email}: ${token}`);
+    }
 
     return NextResponse.json({ message: "Invitation sent successfully." });
   } catch (error: unknown) {

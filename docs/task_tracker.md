@@ -27,7 +27,7 @@ This tracker monitors the progress of the News Website and CMS project. Each tas
 ## Phase 3: CMS Content Management
 
 - [ ] **T006**: Media Library & Image Upload `docs/tasks/T006-media-library.md`
-- [ ] **T007**: Category Management (CRUD) `docs/tasks/T007-category-mgmt.md`
+- [x] **T007**: Category Management (CRUD) `docs/tasks/T007-category-mgmt.md`
 - [ ] **T008**: Tag Management (CRUD) `docs/tasks/T008-tag-mgmt.md`
 - [ ] **T009**: Article Editor & Rich Text Support `docs/tasks/T009-article-editor.md`
 - [ ] **T010**: Article Management (Draft/Publish/Archive) `docs/tasks/T010-article-mgmt.md`

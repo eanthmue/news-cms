@@ -96,8 +96,13 @@ export function InviteUserDialog({ onSuccess }: InviteUserDialogProps) {
                   value={role}
                   onChange={(e) => setRole(e.target.value as Role)}
                 >
-                  <option value={Role.EDITOR}>Editor</option>
-                  <option value={Role.SUPER_ADMIN}>Super Admin</option>
+                  {Object.values(Role).map((r) => (
+                    <option key={r} value={r}>
+                      {r.split("_")
+                        .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                        .join(" ")}
+                    </option>
+                  ))}
                 </select>
               </div>
 

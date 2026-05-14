@@ -101,6 +101,22 @@ describe('UserService', () => {
       await expect(UserService.updateUser('admin-1', { role: Role.EDITOR }, 'admin-1'))
         .rejects.toThrow('You cannot remove your own SUPER_ADMIN role.');
     });
+
+    it('should throw error if trying to demote the last active SUPER_ADMIN', async () => {
+      vi.mocked(prisma.adminUser.findUnique).mockResolvedValue({ id: '2', role: Role.SUPER_ADMIN, isActive: true } as unknown as AdminUser);
+      vi.mocked(prisma.adminUser.count).mockResolvedValue(1);
+
+      await expect(UserService.updateUser('2', { role: Role.EDITOR }, 'admin-1'))
+        .rejects.toThrow('Cannot demote or deactivate the last active SUPER_ADMIN.');
+    });
+
+    it('should throw error if trying to deactivate the last active SUPER_ADMIN', async () => {
+      vi.mocked(prisma.adminUser.findUnique).mockResolvedValue({ id: '2', role: Role.SUPER_ADMIN, isActive: true } as unknown as AdminUser);
+      vi.mocked(prisma.adminUser.count).mockResolvedValue(1);
+
+      await expect(UserService.updateUser('2', { isActive: false }, 'admin-1'))
+        .rejects.toThrow('Cannot demote or deactivate the last active SUPER_ADMIN.');
+    });
   });
 
   describe('deleteUser', () => {
@@ -114,6 +130,14 @@ describe('UserService', () => {
 
       await expect(UserService.deleteUser('non-existent', 'admin-1'))
         .rejects.toThrow('User not found.');
+    });
+
+    it('should throw error if trying to delete the last active SUPER_ADMIN', async () => {
+      vi.mocked(prisma.adminUser.findUnique).mockResolvedValue({ id: '2', role: Role.SUPER_ADMIN, isActive: true } as unknown as AdminUser);
+      vi.mocked(prisma.adminUser.count).mockResolvedValue(1);
+
+      await expect(UserService.deleteUser('2', 'admin-1'))
+        .rejects.toThrow('Cannot delete the last active SUPER_ADMIN.');
     });
 
     it('should delete user and create audit log', async () => {
