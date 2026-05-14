@@ -3,18 +3,46 @@ import { prisma } from '@/lib/prisma';
 import { slugify } from '@/lib/utils';
 import { auth } from '@/lib/auth';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const categories = await prisma.category.findMany({
-      orderBy: { displayOrder: 'asc' },
-      include: {
-        _count: {
-          select: { articles: true },
+    const { searchParams } = new URL(request.url);
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || '10');
+    const skip = (page - 1) * limit;
+
+    const [categories, total] = await Promise.all([
+      prisma.category.findMany({
+        orderBy: { displayOrder: 'asc' },
+        include: {
+          _count: {
+            select: { articles: true },
+          },
+        },
+        skip,
+        take: limit,
+      }),
+      prisma.category.count(),
+    ]);
+
+    const totalPages = Math.ceil(total / limit);
+
+    return NextResponse.json(
+      {
+        success: true,
+        data: categories,
+        meta: {
+          total,
+          page,
+          limit,
+          totalPages,
         },
       },
-    });
-
-    return NextResponse.json({ success: true, data: categories });
+      {
+        headers: {
+          'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300',
+        },
+      }
+    );
   } catch (error) {
     console.error('Error fetching categories:', error);
     return NextResponse.json(

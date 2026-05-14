@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import Image from 'next/image';
 
 interface Article {
@@ -10,27 +10,29 @@ interface Article {
   category: { name: string };
 }
 
+interface ApiResponse {
+  data: Article[];
+  meta: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+}
+
+async function fetchArticles(): Promise<ApiResponse> {
+  const res = await fetch('/api/articles?limit=6');
+  if (!res.ok) throw new Error('Failed to fetch articles');
+  return res.json();
+}
+
 export default function Home() {
-  const [articles, setArticles] = useState<Article[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['articles', { limit: 6 }],
+    queryFn: fetchArticles,
+  });
 
-  useEffect(() => {
-    async function fetchArticles() {
-      try {
-        const res = await fetch('/api/articles');
-        const data = await res.json();
-        if (Array.isArray(data)) {
-          setArticles(data);
-        }
-      } catch (error) {
-        console.error('Failed to fetch articles:', error);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchArticles();
-  }, []);
+  const articles = data?.data || [];
 
   return (
     <div className="flex flex-1 flex-col items-center justify-center bg-zinc-50 font-sans dark:bg-black">
@@ -49,13 +51,15 @@ export default function Home() {
             Latest News
           </h1>
           <p className="max-w-md text-lg text-zinc-600 dark:text-zinc-400">
-            Welcome to our News CMS1. This content is fetched client-side via our Backend API.
+            Welcome to our News CMS. This content is fetched client-side via our Backend API.
           </p>
         </div>
 
         <div className="w-full">
-          {loading ? (
+          {isLoading ? (
             <p>Loading articles...</p>
+          ) : error ? (
+            <p className="text-red-500">Error loading articles.</p>
           ) : articles.length > 0 ? (
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
               {articles.map((article) => (

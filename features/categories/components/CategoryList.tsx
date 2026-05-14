@@ -1,38 +1,62 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import dynamic from "next/dynamic";
 import { Category } from "../types";
 import { categoryService } from "../services/category-service";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Edit, Trash2, Plus } from "lucide-react";
-import { CategoryDialog } from "./CategoryDialog";
 import { CategoryForm } from "./CategoryForm";
 
+const CategoryDialog = dynamic(() => import("./CategoryDialog").then(mod => mod.CategoryDialog), { 
+  ssr: false,
+});
+
 export function CategoryList() {
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | undefined>();
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const fetchCategories = useCallback(async () => {
-    setLoading(true);
-    try {
+  const { data: response, isLoading } = useQuery({
+    queryKey: ["categories"],
+    queryFn: async () => {
       const res = await categoryService.getAll();
-      if (res.success && res.data) {
-        setCategories(res.data);
-      }
-    } catch (error) {
-      console.error("Failed to fetch categories", error);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+      if (!res.success) throw new Error(res.error || "Failed to fetch categories");
+      return res;
+    },
+  });
 
-  useEffect(() => {
-    fetchCategories();
-  }, [fetchCategories]);
+  const categories = response?.data || [];
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => categoryService.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["categories"] });
+    },
+    onError: (error: any) => {
+      alert(error.message || "Failed to delete category");
+    },
+  });
+
+  const submitMutation = useMutation({
+    mutationFn: (data: any) => 
+      editingCategory 
+        ? categoryService.update(editingCategory.id, data) 
+        : categoryService.create(data),
+    onSuccess: (res) => {
+      if (res.success) {
+        setIsDialogOpen(false);
+        queryClient.invalidateQueries({ queryKey: ["categories"] });
+      } else {
+        alert(res.error || "Failed to save category");
+      }
+    },
+    onError: (error: any) => {
+      alert(error.message || "An unexpected error occurred");
+    },
+  });
 
   const handleCreate = () => {
     setEditingCategory(undefined);
@@ -46,38 +70,11 @@ export function CategoryList() {
 
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this category?")) return;
-    try {
-      const res = await categoryService.delete(id);
-      if (res.success) {
-        fetchCategories();
-      } else {
-        alert(res.error || "Failed to delete category");
-      }
-    } catch (error) {
-      console.error("Failed to delete category", error);
-      alert("An unexpected error occurred");
-    }
+    deleteMutation.mutate(id);
   };
 
-  const handleSubmit = async (data: any) => {
-    setIsSubmitting(true);
-    try {
-      const res = editingCategory
-        ? await categoryService.update(editingCategory.id, data)
-        : await categoryService.create(data);
-
-      if (res.success) {
-        setIsDialogOpen(false);
-        fetchCategories();
-      } else {
-        alert(res.error || "Failed to save category");
-      }
-    } catch (error) {
-      console.error("Failed to save category", error);
-      alert("An unexpected error occurred");
-    } finally {
-      setIsSubmitting(false);
-    }
+  const handleSubmit = (data: any) => {
+    submitMutation.mutate(data);
   };
 
   return (
@@ -103,7 +100,7 @@ export function CategoryList() {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {loading ? (
+            {isLoading ? (
               <tr>
                 <td colSpan={6} className="px-6 py-4 text-center text-sm text-gray-500">Loading...</td>
               </tr>
@@ -165,7 +162,7 @@ export function CategoryList() {
           initialData={editingCategory}
           onSubmit={handleSubmit}
           onCancel={() => setIsDialogOpen(false)}
-          isLoading={isSubmitting}
+          isLoading={submitMutation.isPending}
         />
       </CategoryDialog>
     </div>

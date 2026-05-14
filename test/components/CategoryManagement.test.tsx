@@ -1,4 +1,5 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { screen, fireEvent, waitFor } from '@testing-library/react';
+import { render } from '../test-utils';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { CategoryList } from '@/features/categories/components/CategoryList';
 import { categoryService } from '@/features/categories/services/category-service';
@@ -30,6 +31,7 @@ describe('Category Management', () => {
     vi.mocked(categoryService.getAll).mockResolvedValue({
       success: true,
       data: mockCategories,
+      meta: { total: 1, page: 1, limit: 10, totalPages: 1 },
     });
     // Mock window.confirm
     vi.stubGlobal('confirm', vi.fn(() => true));

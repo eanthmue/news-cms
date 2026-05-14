@@ -14,6 +14,7 @@ vi.mock('@/lib/prisma', () => ({
       create: vi.fn(),
       update: vi.fn(),
       delete: vi.fn(),
+      count: vi.fn(),
     },
   },
 }));
@@ -34,23 +35,34 @@ describe('Categories API', () => {
         { id: '1', name: 'Cat 1', slug: 'cat-1', displayOrder: 1, isActive: true },
       ];
       vi.mocked(prisma.category.findMany).mockResolvedValue(mockCategories as any);
+      vi.mocked(prisma.category.count).mockResolvedValue(1);
 
-      const response = await GET();
+      const req = new NextRequest('http://localhost/api/categories');
+      const response = await GET(req);
       const body = await response.json();
 
       expect(response.status).toBe(200);
       expect(body.success).toBe(true);
       expect(body.data).toEqual(mockCategories);
-      expect(prisma.category.findMany).toHaveBeenCalledWith({
+      expect(body.meta).toEqual({
+        total: 1,
+        page: 1,
+        limit: 10,
+        totalPages: 1,
+      });
+      expect(prisma.category.findMany).toHaveBeenCalledWith(expect.objectContaining({
         orderBy: { displayOrder: 'asc' },
         include: { _count: { select: { articles: true } } },
-      });
+        skip: 0,
+        take: 10,
+      }));
     });
 
     it('should return 500 on error', async () => {
       vi.mocked(prisma.category.findMany).mockRejectedValue(new Error('DB error'));
 
-      const response = await GET();
+      const req = new NextRequest('http://localhost/api/categories');
+      const response = await GET(req);
       const body = await response.json();
 
       expect(response.status).toBe(500);

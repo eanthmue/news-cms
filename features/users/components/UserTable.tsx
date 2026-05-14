@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { User, UserListResponse } from "../types";
 import { Role } from "@prisma/client";
 import { Button } from "@/components/ui/button";
@@ -9,93 +10,86 @@ import { Input } from "@/components/ui/input";
 import { Trash2, Shield, User as UserIcon } from "lucide-react";
 
 export function UserTable() {
-  const [users, setUsers] = useState<User[]>([]);
-  const [total, setTotal] = useState(0);
-  const [page, setPage] = useState(1);
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearch(search);
-      setPage(1); // Reset to first page on search
+      setPage(1);
     }, 500);
     return () => clearTimeout(timer);
   }, [search]);
 
-  const fetchUsers = useCallback(async () => {
-    setLoading(true);
-    try {
+  const { data, isLoading } = useQuery({
+    queryKey: ["users", { page, search: debouncedSearch }],
+    queryFn: async (): Promise<UserListResponse> => {
       const query = new URLSearchParams({
         page: page.toString(),
         limit: "10",
         search: debouncedSearch,
       });
       const res = await fetch(`/api/users?${query}`);
-      const data: UserListResponse = await res.json();
-      setUsers(data.users);
-      setTotal(data.total);
-    } catch (error) {
-      console.error("Failed to fetch users", error);
-    } finally {
-      setLoading(false);
-    }
-  }, [page, debouncedSearch]);
+      if (!res.ok) throw new Error("Failed to fetch users");
+      return res.json();
+    },
+  });
 
-  useEffect(() => {
-    fetchUsers();
-  }, [fetchUsers]);
+  const users = data?.users || [];
+  const total = data?.total || 0;
 
-  const handleToggleStatus = async (user: User) => {
-    try {
-      const res = await fetch(`/api/users/${user.id}`, {
+  const mutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: any }) => {
+      const res = await fetch(`/api/users/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ isActive: !user.isActive }),
+        body: JSON.stringify(data),
       });
-      if (res.ok) fetchUsers();
-      else {
+      if (!res.ok) {
         const error = await res.json();
-        alert(error.error || "Failed to toggle status");
+        throw new Error(error.error || "Failed to update user");
       }
-    } catch (error) {
-      console.error("Failed to toggle user status", error);
-      alert("An unexpected error occurred");
-    }
-  };
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+    },
+    onError: (error: any) => {
+      alert(error.message);
+    },
+  });
 
-  const handleToggleRole = async (user: User) => {
-    const newRole = user.role === Role.SUPER_ADMIN ? Role.EDITOR : Role.SUPER_ADMIN;
-    try {
-      const res = await fetch(`/api/users/${user.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ role: newRole }),
-      });
-      if (res.ok) fetchUsers();
-      else {
-        const error = await res.json();
-        alert(error.error || "Failed to change role");
-      }
-    } catch (error) {
-      console.error("Failed to toggle user role", error);
-      alert("An unexpected error occurred");
-    }
-  };
-
-  const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this user?")) return;
-    try {
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
       const res = await fetch(`/api/users/${id}`, { method: "DELETE" });
-      if (res.ok) fetchUsers();
-      else {
+      if (!res.ok) {
         const error = await res.json();
-        alert(error.error || "Failed to delete user");
+        throw new Error(error.error || "Failed to delete user");
       }
-    } catch (error) {
-      console.error("Failed to delete user", error);
-    }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+    },
+    onError: (error: any) => {
+      alert(error.message);
+    },
+  });
+
+  const handleToggleStatus = (user: User) => {
+    mutation.mutate({ id: user.id, data: { isActive: !user.isActive } });
+  };
+
+  const handleToggleRole = (user: User) => {
+    const newRole = user.role === Role.SUPER_ADMIN ? Role.EDITOR : Role.SUPER_ADMIN;
+    mutation.mutate({ id: user.id, data: { role: newRole } });
+  };
+
+  const handleDelete = (id: string) => {
+    if (!confirm("Are you sure you want to delete this user?")) return;
+    deleteMutation.mutate(id);
   };
 
   return (
@@ -121,7 +115,7 @@ export function UserTable() {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {loading ? (
+            {isLoading ? (
               <tr>
                 <td colSpan={5} className="px-6 py-4 text-center">Loading...</td>
               </tr>
@@ -160,10 +154,10 @@ export function UserTable() {
                     {user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleString() : "Never"}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                    <Button variant="ghost" size="icon" onClick={() => handleToggleRole(user)} title="Change Role">
+                    <Button variant="ghost" size="icon" onClick={() => handleToggleRole(user)} title="Change Role" disabled={mutation.isPending}>
                       <Shield className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="text-red-600 hover:text-red-900" onClick={() => handleDelete(user.id)} title="Delete User">
+                    <Button variant="ghost" size="icon" className="text-red-600 hover:text-red-900" onClick={() => handleDelete(user.id)} title="Delete User" disabled={deleteMutation.isPending}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </td>
