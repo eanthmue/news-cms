@@ -113,4 +113,20 @@ describe('Invite API Route (POST /api/auth/invite)', () => {
 
     expect(AuthService.generateInvitationToken).toHaveBeenCalledWith('new@example.com', 'admin-1');
   });
+
+  it('E.13: returns 500 on unexpected service error (non-validation, non-duplicate error)', async () => {
+    authMock.mockResolvedValue(
+      mockSession({ id: 'admin-1', role: Role.SUPER_ADMIN })
+    );
+    vi.mocked(prisma.adminUser.findUnique).mockRejectedValue(
+      new Error('Unexpected DB error')
+    );
+
+    const req = createRequest({ email: 'new@example.com', name: 'New User' });
+    const response = await POST(req);
+
+    expect(response.status).toBe(500);
+    const data = await response.json();
+    expect(data.error).toBe('Unexpected DB error');
+  });
 });

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { GET, POST } from '@/app/api/categories/route';
-import { PATCH, DELETE } from '@/app/api/categories/[id]/route';
+import { GET as GET_BY_ID, PATCH, DELETE } from '@/app/api/categories/[id]/route';
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/lib/auth';
 import { NextRequest } from 'next/server';
@@ -75,6 +75,34 @@ describe('Categories API', () => {
       expect(response.status).toBe(500);
       expect(body.success).toBe(false);
     });
+
+    it('E.1: respects custom page/limit params', async () => {
+      vi.mocked(prisma.category.findMany).mockResolvedValue([]);
+      vi.mocked(prisma.category.count).mockResolvedValue(0);
+
+      const req = new NextRequest('http://localhost/api/categories?page=2&limit=5');
+      await GET(req);
+
+      expect(prisma.category.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          skip: 5,
+          take: 5,
+        })
+      );
+    });
+
+    it('E.2: returns empty list when no categories exist', async () => {
+      vi.mocked(prisma.category.findMany).mockResolvedValue([]);
+      vi.mocked(prisma.category.count).mockResolvedValue(0);
+
+      const req = new NextRequest('http://localhost/api/categories');
+      const response = await GET(req);
+      const body = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(body.data).toEqual([]);
+      expect(body.meta.total).toBe(0);
+    });
   });
 
   describe('POST /api/categories', () => {
@@ -145,6 +173,55 @@ describe('Categories API', () => {
       expect(response.status).toBe(400);
       expect(body.error).toBe('Category with this slug already exists');
     });
+
+    it('E.3: auto-generates slug from name when slug not provided', async () => {
+      const payload = { name: 'New Category' };
+      const req = new NextRequest('http://localhost/api/categories', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      });
+
+      vi.mocked(prisma.category.findUnique).mockResolvedValue(null);
+      vi.mocked(prisma.category.create).mockResolvedValue({
+        id: '1',
+        ...payload,
+        slug: 'new-category',
+      } as any);
+
+      const response = await POST(req);
+      const body = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(body.data.slug).toBe('new-category');
+    });
+
+    it('E.4: accepts optional fields (description, displayOrder, isActive)', async () => {
+      const payload = {
+        name: 'Tech',
+        description: 'Technology news',
+        displayOrder: 10,
+        isActive: false,
+      };
+      const req = new NextRequest('http://localhost/api/categories', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      });
+
+      vi.mocked(prisma.category.findUnique).mockResolvedValue(null);
+      vi.mocked(prisma.category.create).mockResolvedValue({
+        id: '1',
+        ...payload,
+        slug: 'tech',
+      } as any);
+
+      const response = await POST(req);
+      const body = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(prisma.category.create).toHaveBeenCalledWith({
+        data: expect.objectContaining(payload),
+      });
+    });
   });
 
   describe('PATCH /api/categories/[id]', () => {
@@ -193,6 +270,56 @@ describe('Categories API', () => {
 
       const response = await PATCH(req, { params: Promise.resolve({ id: '1' }) });
       expect(response.status).toBe(404);
+    });
+
+    it('E.5: returns 400 when new slug conflicts with existing category', async () => {
+      const id = '1';
+      const payload = { slug: 'existing-slug' };
+      const req = new NextRequest(`http://localhost/api/categories/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify(payload),
+      });
+
+      vi.mocked(prisma.category.findUnique)
+        .mockResolvedValueOnce({ id, slug: 'old-slug' } as any) // existingCategory check
+        .mockResolvedValueOnce({ id: 'other', slug: 'existing-slug' } as any); // slugExists check
+
+      const response = await PATCH(req, { params: Promise.resolve({ id }) });
+      const body = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(body.error).toBe('Slug already in use');
+    });
+
+    it('E.6: does partial update (only description, no name/slug)', async () => {
+      const id = '1';
+      const payload = { description: 'New description' };
+      const req = new NextRequest(`http://localhost/api/categories/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify(payload),
+      });
+
+      vi.mocked(prisma.category.findUnique).mockResolvedValue({
+        id,
+        name: 'Cat 1',
+        slug: 'cat-1',
+      } as any);
+      vi.mocked(prisma.category.update).mockResolvedValue({ id, ...payload } as any);
+
+      const response = await PATCH(req, { params: Promise.resolve({ id }) });
+      const body = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(prisma.category.update).toHaveBeenCalledWith({
+        where: { id },
+        data: {
+          name: undefined,
+          slug: undefined,
+          description: 'New description',
+          displayOrder: undefined,
+          isActive: undefined,
+        },
+      });
     });
   });
 
@@ -246,6 +373,52 @@ describe('Categories API', () => {
       expect(response.status).toBe(400);
       expect(body.error).toContain('associated articles');
       expect(prisma.category.delete).not.toHaveBeenCalled();
+    });
+
+    it('E.7: returns 404 when category does not exist', async () => {
+      vi.mocked(prisma.category.findUnique).mockResolvedValue(null);
+      const req = new NextRequest('http://localhost/api/categories/1', {
+        method: 'DELETE',
+      });
+
+      const response = await DELETE(req, { params: Promise.resolve({ id: '1' }) });
+      expect(response.status).toBe(404);
+    });
+  });
+
+  describe('GET /api/categories/[id]', () => {
+    it('2.1: returns category by id with article count (200)', async () => {
+      const id = '1';
+      const mockCategory = {
+        id,
+        name: 'Cat 1',
+        slug: 'cat-1',
+        _count: { articles: 5 },
+      };
+      vi.mocked(prisma.category.findUnique).mockResolvedValue(mockCategory as any);
+
+      const req = new NextRequest(`http://localhost/api/categories/${id}`);
+      const response = await GET_BY_ID(req, {
+        params: Promise.resolve({ id }),
+      });
+      const body = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(body.success).toBe(true);
+      expect(body.data).toEqual(mockCategory);
+    });
+
+    it('2.2: returns 404 when category does not exist', async () => {
+      vi.mocked(prisma.category.findUnique).mockResolvedValue(null);
+
+      const req = new NextRequest('http://localhost/api/categories/non-existent');
+      const response = await GET_BY_ID(req, {
+        params: Promise.resolve({ id: 'non-existent' }),
+      });
+      const body = await response.json();
+
+      expect(response.status).toBe(404);
+      expect(body.success).toBe(false);
     });
   });
 });

@@ -56,6 +56,37 @@ describe('Users API Routes', () => {
         role: Role.EDITOR,
       });
     });
+
+    it('E.8: handles invalid page param (NaN or < 1) by defaulting to 1', async () => {
+      authMock.mockResolvedValue(mockSession({ role: Role.SUPER_ADMIN }));
+      vi.mocked(UserService.listUsers).mockResolvedValue({
+        users: [],
+        total: 0,
+        page: 1,
+        limit: 10,
+      });
+
+      const req = new Request('http://localhost:3000/api/users?page=0');
+      await GET(req);
+      expect(UserService.listUsers).toHaveBeenCalledWith(
+        expect.objectContaining({ page: 1 })
+      );
+
+      const req2 = new Request('http://localhost:3000/api/users?page=abc');
+      await GET(req2);
+      expect(UserService.listUsers).toHaveBeenCalledWith(
+        expect.objectContaining({ page: 1 })
+      );
+    });
+
+    it('E.9: returns 500 on service error', async () => {
+      authMock.mockResolvedValue(mockSession({ role: Role.SUPER_ADMIN }));
+      vi.mocked(UserService.listUsers).mockRejectedValue(new Error('Service error'));
+
+      const req = new Request('http://localhost:3000/api/users');
+      const response = await GET(req);
+      expect(response.status).toBe(500);
+    });
   });
 
   describe('PATCH /api/users/[id]', () => {
@@ -92,6 +123,18 @@ describe('Users API Routes', () => {
       expect(response.status).toBe(200);
       expect(UserService.updateUser).toHaveBeenCalledWith('1', { isActive: false }, 'admin-1');
     });
+
+    it('E.10: returns 500 on unexpected service error (non-Zod)', async () => {
+      authMock.mockResolvedValue(mockSession({ role: Role.SUPER_ADMIN }));
+      vi.mocked(UserService.updateUser).mockRejectedValue(new Error('DB error'));
+
+      const req = new Request('http://localhost:3000/api/users/1', {
+        method: 'PATCH',
+        body: JSON.stringify({ isActive: false }),
+      });
+      const response = await PATCH(req, { params: Promise.resolve({ id: '1' }) });
+      expect(response.status).toBe(500);
+    });
   });
 
   describe('DELETE /api/users/[id]', () => {
@@ -111,6 +154,24 @@ describe('Users API Routes', () => {
 
       expect(response.status).toBe(200);
       expect(UserService.deleteUser).toHaveBeenCalledWith('1', 'admin-1');
+    });
+
+    it('E.11: returns 404 when user not found', async () => {
+      authMock.mockResolvedValue(mockSession({ role: Role.SUPER_ADMIN }));
+      vi.mocked(UserService.deleteUser).mockRejectedValue(new Error('User not found.'));
+
+      const req = new Request('http://localhost:3000/api/users/1', { method: 'DELETE' });
+      const response = await DELETE(req, { params: Promise.resolve({ id: '1' }) });
+      expect(response.status).toBe(404);
+    });
+
+    it('E.12: returns 500 on service error', async () => {
+      authMock.mockResolvedValue(mockSession({ role: Role.SUPER_ADMIN }));
+      vi.mocked(UserService.deleteUser).mockRejectedValue(new Error('Unexpected error'));
+
+      const req = new Request('http://localhost:3000/api/users/1', { method: 'DELETE' });
+      const response = await DELETE(req, { params: Promise.resolve({ id: '1' }) });
+      expect(response.status).toBe(500);
     });
   });
 });

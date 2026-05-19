@@ -51,6 +51,9 @@ export async function DELETE(
     return NextResponse.json({ message: "User deleted successfully." });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "An unexpected error occurred.";
+    if (message === "User not found.") {
+      return NextResponse.json({ error: message }, { status: 404 });
+    }
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
