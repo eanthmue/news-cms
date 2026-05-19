@@ -1,3 +1,4 @@
+import type { Prisma } from "@prisma/client";
 import { prisma } from "./prisma";
 
 interface AuditLogOptions {
@@ -7,7 +8,7 @@ interface AuditLogOptions {
   userId?: string;
   ipAddress?: string;
   userAgent?: string;
-  metadata?: Record<string, unknown>;
+  metadata?: Prisma.InputJsonValue;
 }
 
 export async function createAuditLog(options: AuditLogOptions) {

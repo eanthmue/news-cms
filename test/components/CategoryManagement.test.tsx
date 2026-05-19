@@ -22,6 +22,8 @@ describe('Category Management', () => {
       slug: 'technology',
       displayOrder: 1,
       isActive: true,
+      createdAt: '2024-01-01T00:00:00.000Z',
+      updatedAt: '2024-01-01T00:00:00.000Z',
       _count: { articles: 0 },
     },
   ];
@@ -69,7 +71,7 @@ describe('Category Management', () => {
     fireEvent.click(screen.getByText('Add Category'));
 
     const nameInput = screen.getByLabelText('Name');
-    const slugInput = screen.getByLabelText('Slug');
+    const slugInput = screen.getByLabelText('Slug') as HTMLInputElement;
 
     fireEvent.change(nameInput, { target: { value: 'New Test Category' } });
 
@@ -79,7 +81,15 @@ describe('Category Management', () => {
   it('submits the form to create a new category', async () => {
     vi.mocked(categoryService.create).mockResolvedValue({
       success: true,
-      data: { id: '2', name: 'New Cat', slug: 'new-cat', displayOrder: 0, isActive: true },
+      data: {
+        id: '2',
+        name: 'New Cat',
+        slug: 'new-cat',
+        displayOrder: 0,
+        isActive: true,
+        createdAt: '2024-01-01T00:00:00.000Z',
+        updatedAt: '2024-01-01T00:00:00.000Z',
+      },
     });
 
     render(<CategoryList />);

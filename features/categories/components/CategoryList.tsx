@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import dynamic from "next/dynamic";
-import { Category } from "../types";
+import { Category, CreateCategoryInput, UpdateCategoryInput } from "../types";
 import { categoryService } from "../services/category-service";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -35,16 +35,16 @@ export function CategoryList() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["categories"] });
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       alert(error.message || "Failed to delete category");
     },
   });
 
   const submitMutation = useMutation({
-    mutationFn: (data: any) => 
-      editingCategory 
-        ? categoryService.update(editingCategory.id, data) 
-        : categoryService.create(data),
+    mutationFn: (data: CreateCategoryInput | UpdateCategoryInput) =>
+      editingCategory
+        ? categoryService.update(editingCategory.id, { ...data, id: editingCategory.id })
+        : categoryService.create(data as CreateCategoryInput),
     onSuccess: (res) => {
       if (res.success) {
         setIsDialogOpen(false);
@@ -53,7 +53,7 @@ export function CategoryList() {
         alert(res.error || "Failed to save category");
       }
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       alert(error.message || "An unexpected error occurred");
     },
   });
@@ -73,8 +73,8 @@ export function CategoryList() {
     deleteMutation.mutate(id);
   };
 
-  const handleSubmit = (data: any) => {
-    submitMutation.mutate(data);
+  const handleSubmit = async (data: CreateCategoryInput | UpdateCategoryInput) => {
+    await submitMutation.mutateAsync(data);
   };
 
   return (

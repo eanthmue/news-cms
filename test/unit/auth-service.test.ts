@@ -2,7 +2,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { AuthService } from '@/features/auth/services/auth-service';
 import { prisma } from '@/lib/prisma';
 import { AdminUser } from '@prisma/client';
-import bcrypt from 'bcryptjs';
 import { createAuditLog } from '@/lib/audit-log';
 
 // Mock dependencies
@@ -16,11 +15,13 @@ vi.mock('@/lib/prisma', () => ({
   },
 }));
 
+const bcryptMocks = vi.hoisted(() => ({
+  compare: vi.fn<() => Promise<boolean>>(),
+  hash: vi.fn<() => Promise<string>>(),
+}));
+
 vi.mock('bcryptjs', () => ({
-  default: {
-    compare: vi.fn(),
-    hash: vi.fn(),
-  },
+  default: bcryptMocks,
 }));
 
 vi.mock('@/lib/audit-log', () => ({
@@ -89,7 +90,7 @@ describe('AuthService', () => {
         lockoutUntil: null,
       } as unknown as AdminUser);
 
-      vi.mocked(bcrypt.compare).mockResolvedValue(false);
+      bcryptMocks.compare.mockResolvedValue(false);
 
       await expect(AuthService.validateCredentials('test@example.com', 'wrong_password'))
         .rejects.toThrow('Invalid credentials or account issue.');
@@ -120,7 +121,7 @@ describe('AuthService', () => {
         lockoutUntil: null,
       } as unknown as AdminUser);
 
-      vi.mocked(bcrypt.compare).mockResolvedValue(true);
+      bcryptMocks.compare.mockResolvedValue(true);
 
       const result = await AuthService.validateCredentials('test@example.com', 'correct_password');
 
@@ -211,7 +212,7 @@ describe('AuthService', () => {
 
     it('should update password and clear reset token', async () => {
       vi.mocked(prisma.adminUser.findFirst).mockResolvedValue({ id: '1' } as unknown as AdminUser);
-      vi.mocked(bcrypt.hash).mockResolvedValue('new-hashed-password');
+      bcryptMocks.hash.mockResolvedValue('new-hashed-password');
 
       await AuthService.resetPassword('valid-token', 'new-password');
 
@@ -241,7 +242,7 @@ describe('AuthService', () => {
 
     it('should update user and activate account', async () => {
       vi.mocked(prisma.adminUser.findFirst).mockResolvedValue({ id: '1' } as unknown as AdminUser);
-      vi.mocked(bcrypt.hash).mockResolvedValue('hashed-password');
+      bcryptMocks.hash.mockResolvedValue('hashed-password');
 
       await AuthService.acceptInvitation('valid-token', 'password', 'New User');
 

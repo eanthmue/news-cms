@@ -86,7 +86,7 @@ export class UserService {
       entity: "AdminUser",
       entityId: user.id,
       userId: adminId,
-      metadata: data,
+      metadata: data as Prisma.InputJsonValue,
     });
 
     return user;

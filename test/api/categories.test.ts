@@ -4,6 +4,12 @@ import { PATCH, DELETE } from '@/app/api/categories/[id]/route';
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/lib/auth';
 import { NextRequest } from 'next/server';
+import { mockSession, type AuthGetSession } from '../helpers/auth-mock';
+import { Role } from '@prisma/client';
+
+const { authMock } = vi.hoisted(() => ({
+  authMock: vi.fn<AuthGetSession>(),
+}));
 
 // Mock Prisma
 vi.mock('@/lib/prisma', () => ({
@@ -21,12 +27,13 @@ vi.mock('@/lib/prisma', () => ({
 
 // Mock Auth
 vi.mock('@/lib/auth', () => ({
-  auth: vi.fn(async () => ({ user: { id: 'test-user-id', role: 'EDITOR' } })),
+  auth: authMock,
 }));
 
 describe('Categories API', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    authMock.mockResolvedValue(mockSession({ role: Role.EDITOR }));
   });
 
   describe('GET /api/categories', () => {
@@ -72,7 +79,7 @@ describe('Categories API', () => {
 
   describe('POST /api/categories', () => {
     it('should fail if unauthorized', async () => {
-      vi.mocked(auth).mockResolvedValueOnce(null);
+      authMock.mockResolvedValueOnce(null);
       const req = new NextRequest('http://localhost/api/categories', {
         method: 'POST',
         body: JSON.stringify({ name: 'New Category' }),
@@ -142,7 +149,7 @@ describe('Categories API', () => {
 
   describe('PATCH /api/categories/[id]', () => {
     it('should fail if unauthorized', async () => {
-      vi.mocked(auth).mockResolvedValueOnce(null);
+      authMock.mockResolvedValueOnce(null);
       const req = new NextRequest('http://localhost/api/categories/1', {
         method: 'PATCH',
         body: JSON.stringify({ name: 'Updated' }),
@@ -191,7 +198,7 @@ describe('Categories API', () => {
 
   describe('DELETE /api/categories/[id]', () => {
     it('should fail if unauthorized', async () => {
-      vi.mocked(auth).mockResolvedValueOnce(null);
+      authMock.mockResolvedValueOnce(null);
       const req = new NextRequest('http://localhost/api/categories/1', {
         method: 'DELETE',
       });
