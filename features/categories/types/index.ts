@@ -27,7 +27,11 @@ export interface UpdateCategoryInput extends Partial<CreateCategoryInput> {
 export interface ApiResponse<T> {
   success: boolean;
   data?: T;
-  error?: string;
+  error?: {
+    code: string;
+    message: string;
+    fieldErrors?: Record<string, string[]>;
+  };
   meta?: {
     total: number;
     page: number;

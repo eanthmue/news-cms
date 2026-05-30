@@ -1,8 +1,8 @@
-import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { UserService } from "@/features/users/services/user-service";
 import { Role } from "@prisma/client";
 import { z } from "zod";
+import { apiErrors, apiSuccess, apiValidationError } from "@/lib/api/response";
 
 const updateUserSchema = z.object({
   role: z.nativeEnum(Role).optional(),
@@ -17,7 +17,7 @@ export async function PATCH(
   const { id } = await params;
 
   if (!session || session.user.role !== Role.SUPER_ADMIN) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+    return apiErrors.forbidden();
   }
 
   try {
@@ -25,13 +25,13 @@ export async function PATCH(
     const data = updateUserSchema.parse(body);
 
     const user = await UserService.updateUser(id, data, session.user.id);
-    return NextResponse.json(user);
+    return apiSuccess(user);
   } catch (error: unknown) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.issues }, { status: 400 });
+      return apiValidationError(error);
     }
     const message = error instanceof Error ? error.message : "An unexpected error occurred.";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return apiErrors.internal(message);
   }
 }
 
@@ -43,17 +43,17 @@ export async function DELETE(
   const { id } = await params;
 
   if (!session || session.user.role !== Role.SUPER_ADMIN) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+    return apiErrors.forbidden();
   }
 
   try {
     await UserService.deleteUser(id, session.user.id);
-    return NextResponse.json({ message: "User deleted successfully." });
+    return apiSuccess(null);
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "An unexpected error occurred.";
     if (message === "User not found.") {
-      return NextResponse.json({ error: message }, { status: 404 });
+      return apiErrors.notFound(message);
     }
-    return NextResponse.json({ error: message }, { status: 500 });
+    return apiErrors.internal(message);
   }
 }

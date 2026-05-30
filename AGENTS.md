@@ -10,9 +10,13 @@ A news website with a CMS built using Next.js 14+ (App Router), TypeScript, Tail
   - Use a `/features` directory to colocate business logic (components, hooks, types, services) by domain.
   - Use **Route Groups** in the `/app` directory (e.g., `(admin)`, `(public)`) to organize routes.
   - Keep `/components/ui` for shared, business-agnostic UI primitives (shadcn/ui).
-- **Component Pattern:** Use Client Components exclusively for UI logic. Every page and component should start with `"use client";` unless there is a specific reason not to (e.g., metadata).
-- **Backend:** All data fetching and mutations must go through **Route Handlers** (API routes in `app/api/`). Do NOT use Server Components for data fetching or Server Actions unless explicitly requested.
-- **State Management:** Use standard React hooks (useState, useEffect) or specialized libraries like TanStack Query for client-side data fetching.
+- **Production Harness:** This file is the main authority for agent behavior. For production-ready work, agents must also follow `docs/production-ready-agent-harness.md` and `docs/production-readiness-task-plan.md`.
+- **Component Pattern:** Use a hybrid model.
+  - Public reader-facing pages should use Server Components, static generation/ISR, and Metadata API where appropriate.
+  - Admin CMS screens should use Client Components for interactive UI.
+  - Add `"use client";` only to components that need client-side React features.
+- **Backend:** Admin data fetching and mutations must go through **Route Handlers** (API routes in `app/api/`). Public reader-facing pages may fetch directly from server-side services or cached repository functions, as defined in the production harness.
+- **State Management:** Use TanStack Query for routine admin server-state fetching. Use standard React hooks for local UI state.
 
 ## Tech Stack
 
@@ -65,5 +69,6 @@ Follow the Vertical Slice structure:
 ## Workflow
 
 1. Refer to `docs/task_tracker.md` for the current task.
-2. Read the corresponding task file in `docs/tasks/`.
-3. Update the task tracker status once a task is completed.
+2. Read `docs/production-ready-agent-harness.md` and `docs/production-readiness-task-plan.md` before production-readiness work.
+3. Read the corresponding task file in `docs/tasks/` for MVP task IDs, or the matching production-readiness section in `docs/production-readiness-task-plan.md` for production task IDs.
+4. Update the task tracker status once a task is completed.

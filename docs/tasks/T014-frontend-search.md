@@ -1,5 +1,7 @@
 # Task T014: Frontend Search
 
+> MVP context note: Production search requirements are expanded by `P010` in `docs/production-readiness-task-plan.md`, including validation, pagination, published-only filtering, and relevance-aware sorting where available.
+
 ## Title
 
 Search Functionality Implementation

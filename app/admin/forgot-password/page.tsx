@@ -25,9 +25,9 @@ export default function ForgotPasswordPage() {
       });
       const data = await res.json();
       if (res.ok) {
-        setMessage(data.message);
+        setMessage(data.data?.message);
       } else {
-        setError(data.error);
+        setError(data.error?.message || "An unexpected error occurred.");
       }
     } catch {
       setError("An unexpected error occurred.");

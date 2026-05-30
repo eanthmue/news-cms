@@ -1,5 +1,7 @@
 # Task: T003-base-structure
 
+> MVP context note: This task predates the current hybrid production architecture. Do not apply older all-client guidance when it conflicts with `AGENTS.md` or `docs/production-ready-agent-harness.md`.
+
 ## Title
 
 Organize folder structure and base UI components (Vertical Slice Architecture)
@@ -29,7 +31,7 @@ Establish a clean project organization using Vertical Slice Architecture and cre
 - Implement basic layout skeletons for Admin and Public views using Route Groups:
   - `app/(admin)/layout.tsx` (Header/Sidebar placeholders).
   - `app/(public)/layout.tsx` (Header/Footer placeholders).
-- Ensure all components use the `"use client";` directive and data fetching is handled via Route Handlers in `app/api/`, as per `GEMINI.md` guardrails.
+- Follow the current hybrid component model in `AGENTS.md`: public reader-facing pages should use Server Components where appropriate, admin screens should use Client Components where interactivity requires them, and `"use client";` should be added only to components that need client-side React features.
 
 ## Verification Steps
 

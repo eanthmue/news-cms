@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { GET } from '@/app/api/users/route';
 import { PATCH, DELETE } from '@/app/api/users/[id]/route';
-import { auth } from '@/lib/auth';
 import { UserService } from '@/features/users/services/user-service';
 import { AdminUser, Role } from '@prisma/client';
 import { mockSession, type AuthGetSession } from '../helpers/auth-mock';
@@ -48,7 +47,16 @@ describe('Users API Routes', () => {
       const response = await GET(req);
 
       expect(response.status).toBe(200);
-      expect(await response.json()).toEqual(mockResult);
+      expect(await response.json()).toEqual({
+        success: true,
+        data: [],
+        meta: {
+          total: 0,
+          page: 1,
+          limit: 10,
+          totalPages: 0,
+        },
+      });
       expect(UserService.listUsers).toHaveBeenCalledWith({
         page: 1,
         limit: 10,

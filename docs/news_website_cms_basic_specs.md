@@ -1,4 +1,6 @@
-# News Website with CMS — Basic Feature Specs
+# News Website with CMS - Basic Feature Specs
+
+> MVP feature context only. Current implementation work must follow `AGENTS.md` and `docs/production-ready-agent-harness.md` when production requirements differ from this original scope.
 
 ## Scope
 
@@ -889,7 +891,7 @@ StaticPage
 
 # 4. Recommended MVP Priority
 
-## Phase 1 — Minimum Launch Version
+## Phase 1 - Minimum Launch Version
 
 Build first:
 
@@ -904,7 +906,7 @@ Build first:
 - Media upload
 - Basic SEO fields
 
-## Phase 2 — CMS Improvements
+## Phase 2 - CMS Improvements
 
 Build next:
 
@@ -915,7 +917,7 @@ Build next:
 - Related articles
 - Popular articles
 
-## Phase 3 — Optimization
+## Phase 3 - Optimization
 
 Build later:
 

@@ -26,7 +26,7 @@ describe('Forgot Password API', () => {
     const body = await response.json();
 
     expect(response.status).toBe(200);
-    expect(body.message).toContain('If an account with that email exists');
+    expect(body.data.message).toContain('If an account with that email exists');
   });
 
   it('should return generic success for non-existing email', async () => {
@@ -41,7 +41,7 @@ describe('Forgot Password API', () => {
     const body = await response.json();
 
     expect(response.status).toBe(200);
-    expect(body.message).toContain('If an account with that email exists');
+    expect(body.data.message).toContain('If an account with that email exists');
   });
 
   it('should return 400 when email format is invalid', async () => {
@@ -66,6 +66,6 @@ describe('Forgot Password API', () => {
     const body = await response.json();
 
     expect(response.status).toBe(500);
-    expect(body.error).toBe('An unexpected error occurred.');
+    expect(body.error.message).toBe('An unexpected error occurred.');
   });
 });

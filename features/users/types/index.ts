@@ -12,10 +12,14 @@ export interface User {
 }
 
 export interface UserListResponse {
-  users: User[];
-  total: number;
-  page: number;
-  limit: number;
+  success: true;
+  data: User[];
+  meta?: {
+    total?: number;
+    page?: number;
+    limit?: number;
+    totalPages?: number;
+  };
 }
 
 export interface UpdateUserRequest {

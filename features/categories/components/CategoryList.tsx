@@ -23,7 +23,7 @@ export function CategoryList() {
     queryKey: ["categories"],
     queryFn: async () => {
       const res = await categoryService.getAll();
-      if (!res.success) throw new Error(res.error || "Failed to fetch categories");
+      if (!res.success) throw new Error(res.error?.message || "Failed to fetch categories");
       return res;
     },
   });
@@ -50,7 +50,7 @@ export function CategoryList() {
         setIsDialogOpen(false);
         queryClient.invalidateQueries({ queryKey: ["categories"] });
       } else {
-        alert(res.error || "Failed to save category");
+        alert(res.error?.message || "Failed to save category");
       }
     },
     onError: (error: Error) => {

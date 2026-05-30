@@ -1,10 +1,10 @@
-import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { AuthService } from "@/features/auth/services/auth-service";
 import { Role } from "@prisma/client";
 import { z } from "zod";
 import crypto from "crypto";
+import { apiErrors, apiSuccess, apiValidationError } from "@/lib/api/response";
 
 const inviteSchema = z.object({
   email: z.string().email(),
@@ -16,7 +16,7 @@ export async function POST(req: Request) {
   const session = await auth();
 
   if (!session || session.user.role !== Role.SUPER_ADMIN) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+    return apiErrors.forbidden();
   }
 
   try {
@@ -25,7 +25,7 @@ export async function POST(req: Request) {
 
     const existingUser = await prisma.adminUser.findUnique({ where: { email } });
     if (existingUser) {
-      return NextResponse.json({ error: "User with this email already exists." }, { status: 400 });
+      return apiErrors.conflict("User with this email already exists.");
     }
 
     // Create user in inactive state
@@ -46,12 +46,12 @@ export async function POST(req: Request) {
       console.log(`Invitation token for ${email}: ${token}`);
     }
 
-    return NextResponse.json({ message: "Invitation sent successfully." });
+    return apiSuccess({ message: "Invitation sent successfully." }, { status: 201 });
   } catch (error: unknown) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.issues }, { status: 400 });
+      return apiValidationError(error);
     }
     const message = error instanceof Error ? error.message : "An unexpected error occurred.";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return apiErrors.internal(message);
   }
 }

@@ -37,11 +37,11 @@ export function UserTable() {
     },
   });
 
-  const users = data?.users || [];
-  const total = data?.total || 0;
+  const users = data?.data || [];
+  const total = data?.meta?.total || 0;
 
   const mutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: any }) => {
+    mutationFn: async ({ id, data }: { id: string; data: { role?: Role; isActive?: boolean } }) => {
       const res = await fetch(`/api/users/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -49,14 +49,14 @@ export function UserTable() {
       });
       if (!res.ok) {
         const error = await res.json();
-        throw new Error(error.error || "Failed to update user");
+        throw new Error(error.error?.message || "Failed to update user");
       }
       return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       alert(error.message);
     },
   });
@@ -66,14 +66,14 @@ export function UserTable() {
       const res = await fetch(`/api/users/${id}`, { method: "DELETE" });
       if (!res.ok) {
         const error = await res.json();
-        throw new Error(error.error || "Failed to delete user");
+        throw new Error(error.error?.message || "Failed to delete user");
       }
       return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       alert(error.message);
     },
   });

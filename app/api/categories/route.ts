@@ -1,13 +1,25 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { slugify } from '@/lib/utils';
 import { auth } from '@/lib/auth';
+import { apiErrors, apiSuccess, apiValidationError } from '@/lib/api/response';
+import { z } from 'zod';
+
+const createCategorySchema = z.object({
+  name: z.string().trim().min(1, 'Name is required'),
+  slug: z.string().trim().optional(),
+  description: z.string().optional().nullable(),
+  displayOrder: z.number().int().optional(),
+  isActive: z.boolean().optional(),
+});
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '10');
+    const pageParam = Number.parseInt(searchParams.get('page') || '1', 10);
+    const limitParam = Number.parseInt(searchParams.get('limit') || '10', 10);
+    const page = Number.isNaN(pageParam) || pageParam < 1 ? 1 : pageParam;
+    const limit = Number.isNaN(limitParam) || limitParam < 1 ? 10 : limitParam;
     const skip = (page - 1) * limit;
 
     const [categories, total] = await Promise.all([
@@ -26,29 +38,20 @@ export async function GET(request: NextRequest) {
 
     const totalPages = Math.ceil(total / limit);
 
-    return NextResponse.json(
-      {
-        success: true,
-        data: categories,
-        meta: {
-          total,
-          page,
-          limit,
-          totalPages,
-        },
+    return apiSuccess(categories, {
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages,
       },
-      {
-        headers: {
-          'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300',
-        },
-      }
-    );
+      headers: {
+        'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300',
+      },
+    });
   } catch (error) {
     console.error('Error fetching categories:', error);
-    return NextResponse.json(
-      { success: false, error: 'Failed to fetch categories' },
-      { status: 500 }
-    );
+    return apiErrors.internal('Failed to fetch categories');
   }
 }
 
@@ -56,22 +59,13 @@ export async function POST(request: NextRequest) {
   try {
     const session = await auth();
     if (!session) {
-      return NextResponse.json(
-        { success: false, error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return apiErrors.unauthenticated();
     }
 
     const body = await request.json();
-    const { name, description, displayOrder, isActive } = body;
-    let { slug } = body;
-
-    if (!name) {
-      return NextResponse.json(
-        { success: false, error: 'Name is required' },
-        { status: 400 }
-      );
-    }
+    const parsedBody = createCategorySchema.parse(body);
+    const { name, description, displayOrder, isActive } = parsedBody;
+    let { slug } = parsedBody;
 
     if (!slug) {
       slug = slugify(name);
@@ -83,10 +77,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (existing) {
-      return NextResponse.json(
-        { success: false, error: 'Category with this slug already exists' },
-        { status: 400 }
-      );
+      return apiErrors.conflict('Category with this slug already exists');
     }
 
     const category = await prisma.category.create({
@@ -99,12 +90,12 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    return NextResponse.json({ success: true, data: category });
+    return apiSuccess(category, { status: 201 });
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return apiValidationError(error);
+    }
     console.error('Error creating category:', error);
-    return NextResponse.json(
-      { success: false, error: 'Failed to create category' },
-      { status: 500 }
-    );
+    return apiErrors.internal('Failed to create category');
   }
 }

@@ -24,7 +24,7 @@ describe('Articles API', () => {
         { id: '1', title: 'Article 1', status: 'Published' },
         { id: '2', title: 'Article 2', status: 'Published' },
       ];
-      vi.mocked(prisma.article.findMany).mockResolvedValue(mockArticles as any);
+      vi.mocked(prisma.article.findMany).mockResolvedValue(mockArticles as never);
       vi.mocked(prisma.article.count).mockResolvedValue(2);
 
       const req = new NextRequest('http://localhost/api/articles?page=1&limit=2');
@@ -32,6 +32,7 @@ describe('Articles API', () => {
       const body = await response.json();
 
       expect(response.status).toBe(200);
+      expect(body.success).toBe(true);
       expect(body.data).toEqual(mockArticles);
       expect(body.meta).toEqual({
         total: 2,
@@ -76,7 +77,7 @@ describe('Articles API', () => {
       const body = await response.json();
 
       expect(response.status).toBe(500);
-      expect(body.error).toBe('Internal Server Error');
+      expect(body.error.message).toBe('An unexpected error occurred.');
     });
   });
 });

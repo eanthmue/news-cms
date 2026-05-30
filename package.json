@@ -9,6 +9,7 @@
     "start": "next start",
     "lint": "eslint",
     "format": "prettier --write .",
+    "verify:harness": "node scripts/verify-harness.mjs",
     "test": "vitest run",
     "test:watch": "vitest"
   },

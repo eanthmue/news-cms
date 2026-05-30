@@ -2,7 +2,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { GET, POST } from '@/app/api/categories/route';
 import { GET as GET_BY_ID, PATCH, DELETE } from '@/app/api/categories/[id]/route';
 import { prisma } from '@/lib/prisma';
-import { auth } from '@/lib/auth';
 import { NextRequest } from 'next/server';
 import { mockSession, type AuthGetSession } from '../helpers/auth-mock';
 import { Role } from '@prisma/client';
@@ -41,7 +40,7 @@ describe('Categories API', () => {
       const mockCategories = [
         { id: '1', name: 'Cat 1', slug: 'cat-1', displayOrder: 1, isActive: true },
       ];
-      vi.mocked(prisma.category.findMany).mockResolvedValue(mockCategories as any);
+      vi.mocked(prisma.category.findMany).mockResolvedValue(mockCategories as never);
       vi.mocked(prisma.category.count).mockResolvedValue(1);
 
       const req = new NextRequest('http://localhost/api/categories');
@@ -117,7 +116,7 @@ describe('Categories API', () => {
       const body = await response.json();
 
       expect(response.status).toBe(401);
-      expect(body.error).toBe('Unauthorized');
+      expect(body.error.code).toBe('UNAUTHENTICATED');
     });
 
     it('should create a new category', async () => {
@@ -134,12 +133,12 @@ describe('Categories API', () => {
         slug: 'new-category',
         displayOrder: 0,
         isActive: true,
-      } as any);
+      } as never);
 
       const response = await POST(req);
       const body = await response.json();
 
-      expect(response.status).toBe(200);
+      expect(response.status).toBe(201);
       expect(body.success).toBe(true);
       expect(body.data.slug).toBe('new-category');
       expect(prisma.category.create).toHaveBeenCalled();
@@ -155,7 +154,8 @@ describe('Categories API', () => {
       const body = await response.json();
 
       expect(response.status).toBe(400);
-      expect(body.error).toBe('Name is required');
+      expect(body.error.code).toBe('VALIDATION_ERROR');
+      expect(Array.isArray(body.error.fieldErrors.name)).toBe(true);
     });
 
     it('should fail if slug already exists', async () => {
@@ -165,13 +165,13 @@ describe('Categories API', () => {
         body: JSON.stringify(payload),
       });
 
-      vi.mocked(prisma.category.findUnique).mockResolvedValue({ id: 'existing' } as any);
+      vi.mocked(prisma.category.findUnique).mockResolvedValue({ id: 'existing' } as never);
 
       const response = await POST(req);
       const body = await response.json();
 
-      expect(response.status).toBe(400);
-      expect(body.error).toBe('Category with this slug already exists');
+      expect(response.status).toBe(409);
+      expect(body.error.message).toBe('Category with this slug already exists');
     });
 
     it('E.3: auto-generates slug from name when slug not provided', async () => {
@@ -186,12 +186,12 @@ describe('Categories API', () => {
         id: '1',
         ...payload,
         slug: 'new-category',
-      } as any);
+      } as never);
 
       const response = await POST(req);
       const body = await response.json();
 
-      expect(response.status).toBe(200);
+      expect(response.status).toBe(201);
       expect(body.data.slug).toBe('new-category');
     });
 
@@ -212,12 +212,10 @@ describe('Categories API', () => {
         id: '1',
         ...payload,
         slug: 'tech',
-      } as any);
+      } as never);
 
       const response = await POST(req);
-      const body = await response.json();
-
-      expect(response.status).toBe(200);
+      expect(response.status).toBe(201);
       expect(prisma.category.create).toHaveBeenCalledWith({
         data: expect.objectContaining(payload),
       });
@@ -236,7 +234,7 @@ describe('Categories API', () => {
       const body = await response.json();
 
       expect(response.status).toBe(401);
-      expect(body.error).toBe('Unauthorized');
+      expect(body.error.code).toBe('UNAUTHENTICATED');
     });
 
     it('should update a category', async () => {
@@ -247,8 +245,8 @@ describe('Categories API', () => {
         body: JSON.stringify(payload),
       });
 
-      vi.mocked(prisma.category.findUnique).mockResolvedValue({ id, slug: 'old-slug' } as any);
-      vi.mocked(prisma.category.update).mockResolvedValue({ id, ...payload } as any);
+      vi.mocked(prisma.category.findUnique).mockResolvedValue({ id, slug: 'old-slug' } as never);
+      vi.mocked(prisma.category.update).mockResolvedValue({ id, ...payload } as never);
 
       const response = await PATCH(req, { params: Promise.resolve({ id }) });
       const body = await response.json();
@@ -281,14 +279,14 @@ describe('Categories API', () => {
       });
 
       vi.mocked(prisma.category.findUnique)
-        .mockResolvedValueOnce({ id, slug: 'old-slug' } as any) // existingCategory check
-        .mockResolvedValueOnce({ id: 'other', slug: 'existing-slug' } as any); // slugExists check
+        .mockResolvedValueOnce({ id, slug: 'old-slug' } as never) // existingCategory check
+        .mockResolvedValueOnce({ id: 'other', slug: 'existing-slug' } as never); // slugExists check
 
       const response = await PATCH(req, { params: Promise.resolve({ id }) });
       const body = await response.json();
 
-      expect(response.status).toBe(400);
-      expect(body.error).toBe('Slug already in use');
+      expect(response.status).toBe(409);
+      expect(body.error.message).toBe('Slug already in use');
     });
 
     it('E.6: does partial update (only description, no name/slug)', async () => {
@@ -303,12 +301,10 @@ describe('Categories API', () => {
         id,
         name: 'Cat 1',
         slug: 'cat-1',
-      } as any);
-      vi.mocked(prisma.category.update).mockResolvedValue({ id, ...payload } as any);
+      } as never);
+      vi.mocked(prisma.category.update).mockResolvedValue({ id, ...payload } as never);
 
       const response = await PATCH(req, { params: Promise.resolve({ id }) });
-      const body = await response.json();
-
       expect(response.status).toBe(200);
       expect(prisma.category.update).toHaveBeenCalledWith({
         where: { id },
@@ -334,7 +330,7 @@ describe('Categories API', () => {
       const body = await response.json();
 
       expect(response.status).toBe(401);
-      expect(body.error).toBe('Unauthorized');
+      expect(body.error.code).toBe('UNAUTHENTICATED');
     });
 
     it('should delete a category if it has no articles', async () => {
@@ -346,7 +342,7 @@ describe('Categories API', () => {
       vi.mocked(prisma.category.findUnique).mockResolvedValue({
         id,
         _count: { articles: 0 },
-      } as any);
+      } as never);
 
       const response = await DELETE(req, { params: Promise.resolve({ id }) });
       const body = await response.json();
@@ -365,13 +361,13 @@ describe('Categories API', () => {
       vi.mocked(prisma.category.findUnique).mockResolvedValue({
         id,
         _count: { articles: 5 },
-      } as any);
+      } as never);
 
       const response = await DELETE(req, { params: Promise.resolve({ id }) });
       const body = await response.json();
 
-      expect(response.status).toBe(400);
-      expect(body.error).toContain('associated articles');
+      expect(response.status).toBe(409);
+      expect(body.error.message).toContain('associated articles');
       expect(prisma.category.delete).not.toHaveBeenCalled();
     });
 
@@ -395,7 +391,7 @@ describe('Categories API', () => {
         slug: 'cat-1',
         _count: { articles: 5 },
       };
-      vi.mocked(prisma.category.findUnique).mockResolvedValue(mockCategory as any);
+      vi.mocked(prisma.category.findUnique).mockResolvedValue(mockCategory as never);
 
       const req = new NextRequest(`http://localhost/api/categories/${id}`);
       const response = await GET_BY_ID(req, {

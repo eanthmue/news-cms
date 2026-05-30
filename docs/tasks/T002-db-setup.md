@@ -1,5 +1,7 @@
 # Task: T002-db-setup
 
+> MVP context note: This task originally allowed SQLite for local MVP development. Production-readiness work must follow `docs/production-ready-agent-harness.md`, which requires PostgreSQL assumptions for staging and production.
+
 ## Title
 
 Set up Database and ORM

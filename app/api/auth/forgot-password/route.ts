@@ -1,6 +1,6 @@
-import { NextResponse } from "next/server";
 import { AuthService } from "@/features/auth/services/auth-service";
 import { z } from "zod";
+import { apiErrors, apiSuccess, apiValidationError } from "@/lib/api/response";
 
 const forgotPasswordSchema = z.object({
   email: z.string().email(),
@@ -19,13 +19,13 @@ export async function POST(req: Request) {
     }
 
     // Always return success to avoid email enumeration
-    return NextResponse.json({
+    return apiSuccess({
       message: "If an account with that email exists, a reset link has been sent.",
     });
   } catch (error: unknown) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.issues }, { status: 400 });
+      return apiValidationError(error);
     }
-    return NextResponse.json({ error: "An unexpected error occurred." }, { status: 500 });
+    return apiErrors.internal();
   }
 }

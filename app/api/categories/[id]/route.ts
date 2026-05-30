@@ -1,6 +1,16 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/lib/auth';
+import { apiErrors, apiSuccess, apiValidationError } from '@/lib/api/response';
+import { z } from 'zod';
+
+const updateCategorySchema = z.object({
+  name: z.string().trim().min(1, 'Name is required').optional(),
+  slug: z.string().trim().min(1, 'Slug is required').optional(),
+  description: z.string().optional().nullable(),
+  displayOrder: z.number().int().optional(),
+  isActive: z.boolean().optional(),
+});
 
 export async function GET(
   request: NextRequest,
@@ -18,19 +28,13 @@ export async function GET(
     });
 
     if (!category) {
-      return NextResponse.json(
-        { success: false, error: 'Category not found' },
-        { status: 404 }
-      );
+      return apiErrors.notFound('Category not found');
     }
 
-    return NextResponse.json({ success: true, data: category });
+    return apiSuccess(category);
   } catch (error) {
     console.error('Error fetching category:', error);
-    return NextResponse.json(
-      { success: false, error: 'Failed to fetch category' },
-      { status: 500 }
-    );
+    return apiErrors.internal('Failed to fetch category');
   }
 }
 
@@ -41,25 +45,19 @@ export async function PATCH(
   try {
     const session = await auth();
     if (!session) {
-      return NextResponse.json(
-        { success: false, error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return apiErrors.unauthenticated();
     }
 
     const { id } = await params;
     const body = await request.json();
-    const { name, slug, description, displayOrder, isActive } = body;
+    const { name, slug, description, displayOrder, isActive } = updateCategorySchema.parse(body);
 
     const existingCategory = await prisma.category.findUnique({
       where: { id },
     });
 
     if (!existingCategory) {
-      return NextResponse.json(
-        { success: false, error: 'Category not found' },
-        { status: 404 }
-      );
+      return apiErrors.notFound('Category not found');
     }
 
     // If slug is being updated, check for uniqueness
@@ -69,10 +67,7 @@ export async function PATCH(
       });
 
       if (slugExists) {
-        return NextResponse.json(
-          { success: false, error: 'Slug already in use' },
-          { status: 400 }
-        );
+        return apiErrors.conflict('Slug already in use');
       }
     }
 
@@ -87,13 +82,13 @@ export async function PATCH(
       },
     });
 
-    return NextResponse.json({ success: true, data: updatedCategory });
+    return apiSuccess(updatedCategory);
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return apiValidationError(error);
+    }
     console.error('Error updating category:', error);
-    return NextResponse.json(
-      { success: false, error: 'Failed to update category' },
-      { status: 500 }
-    );
+    return apiErrors.internal('Failed to update category');
   }
 }
 
@@ -104,10 +99,7 @@ export async function DELETE(
   try {
     const session = await auth();
     if (!session) {
-      return NextResponse.json(
-        { success: false, error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return apiErrors.unauthenticated();
     }
 
     const { id } = await params;
@@ -123,32 +115,20 @@ export async function DELETE(
     });
 
     if (!category) {
-      return NextResponse.json(
-        { success: false, error: 'Category not found' },
-        { status: 404 }
-      );
+      return apiErrors.notFound('Category not found');
     }
 
     if (category._count.articles > 0) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Cannot delete category with associated articles',
-        },
-        { status: 400 }
-      );
+      return apiErrors.conflict('Cannot delete category with associated articles');
     }
 
     await prisma.category.delete({
       where: { id },
     });
 
-    return NextResponse.json({ success: true });
+    return apiSuccess(null);
   } catch (error) {
     console.error('Error deleting category:', error);
-    return NextResponse.json(
-      { success: false, error: 'Failed to delete category' },
-      { status: 500 }
-    );
+    return apiErrors.internal('Failed to delete category');
   }
 }

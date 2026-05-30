@@ -1,38 +1,10 @@
-'use client';
-
-import { useQuery } from '@tanstack/react-query';
 import Image from 'next/image';
+import { getLatestPublishedArticles } from '@/features/public-content/services/article-service';
 
-interface Article {
-  id: string;
-  title: string;
-  summary: string | null;
-  category: { name: string };
-}
+export const dynamic = 'force-dynamic';
 
-interface ApiResponse {
-  data: Article[];
-  meta: {
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-  };
-}
-
-async function fetchArticles(): Promise<ApiResponse> {
-  const res = await fetch('/api/articles?limit=6');
-  if (!res.ok) throw new Error('Failed to fetch articles');
-  return res.json();
-}
-
-export default function Home() {
-  const { data, isLoading, error } = useQuery({
-    queryKey: ['articles', { limit: 6 }],
-    queryFn: fetchArticles,
-  });
-
-  const articles = data?.data || [];
+export default async function Home() {
+  const articles = await getLatestPublishedArticles(6);
 
   return (
     <div className="flex flex-1 flex-col items-center justify-center bg-zinc-50 font-sans dark:bg-black">
@@ -51,16 +23,13 @@ export default function Home() {
             Latest News
           </h1>
           <p className="max-w-md text-lg text-zinc-600 dark:text-zinc-400">
-            Welcome to our News CMS. This content is fetched client-side via our Backend API.
+            Welcome to our News CMS. Published stories are rendered on the server for fast,
+            crawlable public pages.
           </p>
         </div>
 
         <div className="w-full">
-          {isLoading ? (
-            <p>Loading articles...</p>
-          ) : error ? (
-            <p className="text-red-500">Error loading articles.</p>
-          ) : articles.length > 0 ? (
+          {articles.length > 0 ? (
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
               {articles.map((article) => (
                 <div key={article.id} className="rounded-lg border border-zinc-200 p-4 dark:border-zinc-800">

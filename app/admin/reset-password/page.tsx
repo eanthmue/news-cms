@@ -44,7 +44,7 @@ function ResetPasswordForm() {
       if (res.ok) {
         router.push("/admin/login?reset=success");
       } else {
-        setError(data.error);
+        setError(data.error?.message || "An unexpected error occurred.");
       }
     } catch {
       setError("An unexpected error occurred.");

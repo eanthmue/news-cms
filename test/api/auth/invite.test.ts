@@ -51,7 +51,7 @@ describe('Invite API Route (POST /api/auth/invite)', () => {
 
     expect(response.status).toBe(403);
     const data = await response.json();
-    expect(data.error).toBe('Unauthorized');
+    expect(data.error.code).toBe('FORBIDDEN');
   });
 
   it('should return 403 if user is not SUPER_ADMIN', async () => {
@@ -62,7 +62,7 @@ describe('Invite API Route (POST /api/auth/invite)', () => {
 
     expect(response.status).toBe(403);
     const data = await response.json();
-    expect(data.error).toBe('Unauthorized');
+    expect(data.error.code).toBe('FORBIDDEN');
   });
 
   it('should return 400 if validation fails', async () => {
@@ -73,7 +73,8 @@ describe('Invite API Route (POST /api/auth/invite)', () => {
 
     expect(response.status).toBe(400);
     const data = await response.json();
-    expect(Array.isArray(data.error)).toBe(true);
+    expect(data.error.code).toBe('VALIDATION_ERROR');
+    expect(data.error.fieldErrors).toBeDefined();
   });
 
   it('should return 400 if user already exists', async () => {
@@ -83,9 +84,9 @@ describe('Invite API Route (POST /api/auth/invite)', () => {
     const req = createRequest({ email: 'existing@example.com', name: 'Existing User' });
     const response = await POST(req);
 
-    expect(response.status).toBe(400);
+    expect(response.status).toBe(409);
     const data = await response.json();
-    expect(data.error).toBe('User with this email already exists.');
+    expect(data.error.message).toBe('User with this email already exists.');
   });
 
   it('should create user and return success on valid request', async () => {
@@ -97,9 +98,9 @@ describe('Invite API Route (POST /api/auth/invite)', () => {
     const req = createRequest({ email: 'new@example.com', name: 'New User', role: 'EDITOR' });
     const response = await POST(req);
 
-    expect(response.status).toBe(200);
+    expect(response.status).toBe(201);
     const data = await response.json();
-    expect(data.message).toBe('Invitation sent successfully.');
+    expect(data.data.message).toBe('Invitation sent successfully.');
 
     expect(prisma.adminUser.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
@@ -127,6 +128,6 @@ describe('Invite API Route (POST /api/auth/invite)', () => {
 
     expect(response.status).toBe(500);
     const data = await response.json();
-    expect(data.error).toBe('Unexpected DB error');
+    expect(data.error.message).toBe('Unexpected DB error');
   });
 });

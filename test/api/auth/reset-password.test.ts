@@ -26,7 +26,7 @@ describe('Reset Password API', () => {
     const body = await response.json();
 
     expect(response.status).toBe(200);
-    expect(body.message).toBe('Password has been reset successfully.');
+    expect(body.data.message).toBe('Password has been reset successfully.');
   });
 
   it('should return 400 when token is empty', async () => {
@@ -61,6 +61,6 @@ describe('Reset Password API', () => {
     const body = await response.json();
 
     expect(response.status).toBe(400);
-    expect(body.error).toBe('Invalid or expired reset token');
+    expect(body.error.message).toBe('Invalid or expired reset token');
   });
 });

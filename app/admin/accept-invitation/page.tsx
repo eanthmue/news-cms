@@ -45,7 +45,7 @@ function AcceptInvitationForm() {
       if (res.ok) {
         router.push("/admin/login?invited=success");
       } else {
-        setError(data.error);
+        setError(data.error?.message || "An unexpected error occurred.");
       }
     } catch {
       setError("An unexpected error occurred.");

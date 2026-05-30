@@ -33,7 +33,7 @@ export function InviteUserDialog({ onSuccess }: InviteUserDialogProps) {
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || "Failed to send invitation");
+        throw new Error(data.error?.message || "Failed to send invitation");
       }
 
       setIsOpen(false);

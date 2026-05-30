@@ -34,7 +34,7 @@ describe('User Management Components', () => {
     it('should fetch and display users', async () => {
       globalFetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ users: mockUsers, total: 1 }),
+        json: async () => ({ success: true, data: mockUsers, meta: { total: 1 } }),
       });
 
       render(<UserTable />);
@@ -53,9 +53,9 @@ describe('User Management Components', () => {
       globalFetch
         .mockResolvedValueOnce({
           ok: true,
-          json: async () => ({ users: mockUsers, total: 1 }),
+          json: async () => ({ success: true, data: mockUsers, meta: { total: 1 } }),
         })
-        .mockResolvedValueOnce({ ok: true }); // PATCH response
+        .mockResolvedValueOnce({ ok: true, json: async () => ({ success: true, data: mockUsers[0] }) });
 
       render(<UserTable />);
 
@@ -78,9 +78,9 @@ describe('User Management Components', () => {
       globalFetch
         .mockResolvedValueOnce({
           ok: true,
-          json: async () => ({ users: mockUsers, total: 1 }),
+          json: async () => ({ success: true, data: mockUsers, meta: { total: 1 } }),
         })
-        .mockResolvedValueOnce({ ok: true }); // DELETE response
+        .mockResolvedValueOnce({ ok: true, json: async () => ({ success: true, data: null }) });
 
       render(<UserTable />);
 

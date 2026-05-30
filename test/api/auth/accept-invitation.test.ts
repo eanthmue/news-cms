@@ -27,7 +27,7 @@ describe('Accept Invitation API', () => {
     const body = await response.json();
 
     expect(response.status).toBe(200);
-    expect(body.message).toBe('Invitation accepted successfully. You can now log in.');
+    expect(body.data.message).toBe('Invitation accepted successfully. You can now log in.');
     expect(AuthService.acceptInvitation).toHaveBeenCalledWith('valid-token', 'password123', 'New User');
   });
 
@@ -73,6 +73,6 @@ describe('Accept Invitation API', () => {
     const body = await response.json();
 
     expect(response.status).toBe(400);
-    expect(body.error).toBe('Invalid or expired invitation token');
+    expect(body.error.message).toBe('Invalid or expired invitation token');
   });
 });

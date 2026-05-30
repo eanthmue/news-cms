@@ -1,6 +1,6 @@
-import { NextResponse } from "next/server";
 import { AuthService } from "@/features/auth/services/auth-service";
 import { z } from "zod";
+import { apiErrors, apiSuccess, apiValidationError } from "@/lib/api/response";
 
 const acceptInvitationSchema = z.object({
   token: z.string().min(1),
@@ -15,12 +15,12 @@ export async function POST(req: Request) {
 
     await AuthService.acceptInvitation(token, password, name);
 
-    return NextResponse.json({ message: "Invitation accepted successfully. You can now log in." });
+    return apiSuccess({ message: "Invitation accepted successfully. You can now log in." });
   } catch (error: unknown) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.issues }, { status: 400 });
+      return apiValidationError(error);
     }
     const message = error instanceof Error ? error.message : "An unexpected error occurred.";
-    return NextResponse.json({ error: message }, { status: 400 });
+    return apiErrors.badRequest(message);
   }
 }
