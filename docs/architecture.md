@@ -142,10 +142,11 @@ type ApiFailure = {
 
 #### Mutation Requirements:
 1.  **Zod Parsing:** All payloads (query params or JSON body) are validated with schemas before processing.
-2.  **Role Verification:** Server-side roles are strictly checked at the API handler level (never trust client-side state).
+2.  **Role Verification:** Server-side roles are strictly checked at the API handler level and in a shared DAL/service authorization boundary where database access occurs. Middleware is never treated as the only security boundary.
 3.  **Conflict Prevention:** Duplicate slug requests must fail with a `409 Conflict` error.
-4.  **Revalidation Triggers:** Successful database modifications of content must trigger on-demand Next.js path or tag revalidation (`revalidatePath`, `revalidateTag`) to propagate updates to the public site.
-5.  **Audit Logs:** Critical actions (publishing, modifying settings, user invites, deletes) must write an immutable audit trail in the `AuditLog` table.
+4.  **CSRF Protection:** Cookie-authenticated admin mutations must pass explicit CSRF validation or documented Origin/Fetch Metadata checks before mutation.
+5.  **Revalidation Triggers:** Successful database modifications of content must trigger on-demand Next.js path or tag revalidation (`revalidatePath`, `revalidateTag`) to propagate updates to the public site.
+6.  **Audit Logs:** Critical actions (publishing, modifying settings, user invites, deletes) must write an immutable audit trail in the `AuditLog` table.
 
 ---
 
@@ -170,10 +171,15 @@ The database model is configured for PostgreSQL using Prisma. Key requirements f
 ## 6. Security & Integrity Guardrails
 
 ### 6.1 Authentication & RBAC
-*   **Auth Provider:** NextAuth.js or Lucia Auth utilizing secure, HTTP-only, encrypted session cookies.
+*   **Auth Provider:** NextAuth.js/Auth.js or another approved production auth library utilizing secure, HTTP-only, encrypted session cookies.
 *   **Password Hashing:** Stored using bcrypt or Argon2id with production-safe cost configurations.
+*   **Password Policy:** Admin passwords use modern length-first rules, common-password blocking where practical, and rate limiting instead of arbitrary composition-only requirements.
 *   **Role-Based Access Control (RBAC):** Supported roles include `SUPER_ADMIN` (full system ownership, user creation, settings config) and `EDITOR` (content creation, categorizing, tagging).
 *   **Account Locking:** Automated login rate-limiting and lockout constraints after consecutive failed authentication attempts.
+*   **MFA:** `SUPER_ADMIN` accounts require MFA before production launch, with MFA enrollment supported for all administrators.
+*   **Session Controls:** Inactivity timeout, absolute session lifetime, disabled-user revocation, and re-authentication for sensitive actions are documented and tested.
+*   **Authorization Boundary:** Middleware protects navigation and redirects, while Route Handlers and DAL/service helpers enforce the true authorization boundary.
+*   **Security Headers:** Production responses configure CSP, HSTS, clickjacking protection, `X-Content-Type-Options`, Referrer-Policy, and Permissions-Policy.
 
 ### 6.2 Content Safety (XSS Prevention)
 *   **TipTap Integration:** Content is saved preferably in structured JSON formats or parsed HTML.
@@ -182,7 +188,10 @@ The database model is configured for PostgreSQL using Prisma. Key requirements f
 
 ### 6.3 Media Security
 *   **Storage Target:** S3-compatible Object Storage (e.g., AWS S3, Cloudflare R2) in production; local file system is restricted to the development environment.
-*   **Upload Validation:** Explicit validation of MIME type and file extensions (JPG, JPEG, PNG, WebP) combined with file size checks.
+*   **Upload Flow:** Production uploads prefer presigned direct-to-object-storage URLs after server-side validation, with completion confirmation before database persistence.
+*   **Upload Validation:** Explicit validation of MIME type, file signatures, and file extensions (JPG, JPEG, PNG, WebP) combined with file size checks.
+*   **Storage Keys:** Trusted storage keys are generated server-side; original filenames are sanitized and never used directly as paths.
+*   **Metadata & Scanning:** Sensitive image metadata is stripped or normalized where practical, and malware/object scanning is enabled where supported by the production storage stack.
 *   **Asset References:** A delete operation on media is blocked if it is actively linked inside a published `Article`'s content or featured image property.
 
 ---
