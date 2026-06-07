@@ -15,6 +15,7 @@ Use this file to decide which project documents are authoritative.
 ## Feature Context
 
 - `news_website_cms_basic_specs.md` - original product scope and MVP feature context.
+- `specs/overview.md` - functional and technical specification index for the public frontend and admin CMS.
 - `tasks/` - detailed MVP task files `T001` through `T020`.
 
 When these files conflict with the production harness, follow `AGENTS.md` and `production-ready-agent-harness.md`.
