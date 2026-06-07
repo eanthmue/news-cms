@@ -33,6 +33,9 @@ Create a comprehensive admin interface and backend logic to manage CMS administr
 
 ### Role Management
 - Allow super admins to change the roles of existing users.
+- Require recent re-authentication for role changes, user deletion, MFA reset, and disabling another super admin.
+- Require MFA enrollment for super admins before production launch, and expose MFA status in the admin user list.
+- Audit log all invite, enable, disable, delete, role change, MFA reset, and password reset actions.
 
 ## Verification Steps
 
@@ -44,3 +47,5 @@ Create a comprehensive admin interface and backend logic to manage CMS administr
 6. Re-enable the Editor account and verify login succeeds.
 7. Delete the Editor account and verify they are removed from the list and can no longer log in.
 8. Attempt to delete your own Super Admin account and verify the system prevents this action.
+9. Attempt a privileged user-management action without recent re-authentication and verify it is rejected.
+10. Verify super-admin accounts cannot be production-active without MFA enrollment.

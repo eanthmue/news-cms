@@ -198,15 +198,22 @@ Use NextAuth or another approved production auth library with secure HTTP-only c
 Required:
 
 - Password hashing with Argon2id or bcrypt with production-safe cost settings.
+- Password policy must follow current NIST-style guidance: allow long passphrases, require at least 15 characters for password-only admin accounts, avoid arbitrary composition rules, check common/breached-password blocklists where practical, and never truncate passwords below 64 characters.
 - Role-based access control with at least `SUPER_ADMIN` and `EDITOR`.
-- Middleware or proxy protection for all `/admin/*` routes except allowed auth/setup routes.
+- Middleware or proxy protection for all `/admin/*` routes except allowed auth/setup routes. Middleware is a redirect and coarse access guard, not the primary security boundary.
 - Server-side role checks in every admin Route Handler.
+- A centralized authorization boundary, preferably `lib/dal` or equivalent service helpers, must guard database reads and writes that touch admin or non-public data. Route Handlers should call this boundary instead of scattering raw authorization checks.
 - Rate limiting for login, password reset, invite acceptance, and upload endpoints.
 - Account lockout after repeated failed logins.
 - Secure password reset tokens with expiry, one-time use, and hashed token storage.
 - Secure invite tokens with expiry, one-time use, and hashed token storage.
+- MFA must be required for `SUPER_ADMIN` accounts before production launch and supported for all admin accounts. Prefer WebAuthn/passkeys or TOTP over SMS.
+- Session controls must define inactivity timeout, absolute max session lifetime, disabled-user/session revocation behavior, and re-authentication for sensitive actions such as role changes, user deletion, and MFA changes.
 - Audit logs for login success/failure, logout, invite, password reset, user disable/enable/delete, role change, publish/unpublish/archive/delete, media delete, and settings changes.
-- Explicit CSRF protection for cookie-authenticated admin mutations, or a documented security decision explaining how the selected auth/session strategy prevents cross-site mutation attacks.
+- Explicit CSRF protection for cookie-authenticated admin mutations, or a documented security decision explaining how the selected auth/session strategy prevents cross-site mutation attacks. SameSite cookies alone are defense in depth and are not sufficient as the whole CSRF design.
+- Origin/Referer and Fetch Metadata checks should be used for state-changing admin Route Handlers where compatible with the deployment.
+- Security headers must be configured for production: Content-Security-Policy, `frame-ancestors` or equivalent clickjacking protection, Strict-Transport-Security, `X-Content-Type-Options`, Referrer-Policy, and a conservative Permissions-Policy.
+- API errors must not leak stack traces, database errors, filesystem paths, secrets, tokens, or provider internals.
 
 Never trust client-side role checks.
 
@@ -229,10 +236,15 @@ Production media storage must use S3-compatible object storage or another durabl
 
 Required:
 
+- Prefer presigned direct-to-object-storage uploads for production so large files do not stream through the Next.js server. If proxy uploads are used, document the size, timeout, and memory limits.
 - Validate MIME type and file extension.
 - Inspect image content where practical, not just filename.
 - Enforce configurable file size limits.
 - Allow only JPG, JPEG, PNG, and WebP unless a task explicitly expands support.
+- Generate trusted storage keys server-side. Do not trust user-provided filenames for paths.
+- Sanitize original filenames before storing or displaying them.
+- Strip or normalize image metadata where practical to avoid leaking sensitive EXIF/location data.
+- Add malware scanning or provider-side object scanning before production launch when supported by the deployment stack.
 - Store width, height, file size, MIME type, alt text, storage key, public URL, and uploader.
 - Generate or preserve responsive dimensions for `next/image`.
 - Prevent deletion of media currently referenced by published content unless reassignment or confirmation rules are implemented.
@@ -326,11 +338,13 @@ Production tasks must account for operations, not only UI behavior.
 Required:
 
 - Structured server logging for errors and sensitive admin actions.
+- Security-relevant logs must include actor, action, entity, IP address, user agent, result, and timestamp, while excluding passwords, reset/invite tokens, session tokens, and full request bodies containing secrets.
 - Error boundaries for admin and public route groups.
 - `not-found.tsx` for public routes.
 - Health check endpoint if deploying to infrastructure that needs it.
 - Environment variable documentation.
 - No secrets in source control.
+- Production security headers and CSP must be documented, tested, and reviewed when adding rich text embeds, external media, analytics, or third-party scripts.
 - Database migration workflow documented.
 - Seed workflow for initial super admin documented.
 - Backup/restore expectations for database and media storage documented before production launch.

@@ -25,7 +25,7 @@ A news website with a CMS built using Next.js 14+ (App Router), TypeScript, Tail
 - **Styling:** Tailwind CSS, shadcn/ui
 - **Icons:** Lucide React
 - **Database:** Prisma (PostgreSQL recommended)
-- **Auth:** NextAuth.js or Lucia Auth (TBD in T004)
+- **Auth:** NextAuth.js/Auth.js or another approved production auth library
 - **Testing:** Vitest, React Testing Library
 
 ## Directory Structure
@@ -57,7 +57,8 @@ Follow the Vertical Slice structure:
 - **Data Validation:** Use Zod for schema validation (forms, API requests).
 - **Slug Uniqueness:** Ensure article and category slugs are unique and URL-friendly.
 - **Sanitization:** Sanitize HTML content from the rich text editor before rendering to prevent XSS.
-- **Auth:** Protect all `/admin/*` routes using middleware.
+- **Auth:** Protect all `/admin/*` routes using middleware as a UX guard, and enforce auth/role checks server-side in admin Route Handlers or a centralized data access layer. Middleware must not be the only security boundary.
+- **CSRF:** Cookie-authenticated admin mutations must use explicit CSRF protection or a documented Origin/Fetch Metadata based decision approved by the production harness.
 - **Media:** Validate file types (JPG, PNG, WebP) and size limits in the media library.
 
 ## Performance Standards

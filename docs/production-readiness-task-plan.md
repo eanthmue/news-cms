@@ -57,14 +57,23 @@ Make CMS authentication production-safe.
 - Use secure HTTP-only cookie sessions through the selected auth library.
 - Implement `SUPER_ADMIN` and `EDITOR` roles.
 - Protect all `/admin/*` routes except explicitly allowed auth/setup routes.
-- Enforce server-side permissions in every admin Route Handler.
+- Enforce server-side permissions in every admin Route Handler and through a centralized DAL/service authorization boundary for admin and non-public data.
 - Implement rate limiting, account lockout, password reset, invites, disabled-user rejection, and audit logs.
+- Add MFA for `SUPER_ADMIN` users and support MFA enrollment for all admins.
+- Define session inactivity timeout, absolute session lifetime, disabled-user session rejection, and re-authentication for sensitive account actions.
+- Replace composition-only password rules with length, blocklist, and rate-limit based policy.
+- Add explicit CSRF protection for cookie-authenticated admin mutations, or document and test an Origin/Fetch Metadata based security decision.
+- Configure production security headers including CSP, HSTS, clickjacking protection, `X-Content-Type-Options`, Referrer-Policy, and Permissions-Policy.
 
 ### Verification
 
 - Failed login attempts trigger lockout.
 - Disabled users cannot log in or continue using existing sessions.
 - Editors cannot access super-admin-only actions.
+- Super admins must complete MFA before privileged access in production mode.
+- Cross-site mutation attempts fail CSRF or Origin/Fetch Metadata validation.
+- Admin endpoints remain protected when middleware is bypassed or not executed in tests.
+- Security headers are present on representative public and admin responses.
 - Auth-related audit logs are written.
 
 ## P004: API Contract and Validation
@@ -81,10 +90,13 @@ Standardize all admin and public API behavior.
 - Duplicate slug conflicts return `409`.
 - Pagination metadata is returned for list endpoints.
 - Error handling avoids leaking stack traces or secrets.
+- State-changing admin endpoints validate authorization, CSRF/Origin requirements, and business rules before mutation.
 
 ### Verification
 
 - API tests cover success, validation failure, auth failure, forbidden, not found, and conflict cases.
+- API tests cover CSRF/Origin rejection for cookie-authenticated mutations.
+- API tests prove unauthorized roles cannot mutate protected resources even if route middleware is not involved.
 - Existing feature services consume the standard response shape.
 
 ## P005: Public Rendering and SEO
@@ -138,7 +150,11 @@ Make media upload and usage production-safe.
 
 - Use S3-compatible object storage or another durable external storage provider for production.
 - Keep local storage as development-only.
+- Prefer presigned direct uploads for production, with server-side validation before issuing upload URLs and confirmation before database persistence.
 - Validate image type, extension, size, and metadata.
+- Generate server-owned storage keys and sanitize original filenames.
+- Strip or normalize sensitive image metadata where practical.
+- Add malware/object scanning where supported by the production storage stack.
 - Store dimensions, MIME type, alt text, storage key, URL, uploader, and timestamps.
 - Prevent unsafe deletion of media referenced by published content.
 - Use `next/image` with configured remote patterns.
@@ -147,6 +163,8 @@ Make media upload and usage production-safe.
 
 - Invalid files are rejected.
 - Oversized files are rejected.
+- Mismatched extension/MIME/signature files are rejected.
+- Uploaded objects cannot choose arbitrary storage paths.
 - Uploaded media renders through `next/image`.
 - Referenced published media cannot be silently deleted.
 
@@ -240,9 +258,11 @@ Prepare the application to be operated in production.
 ### Requirements
 
 - Add structured error logging.
+- Add security event logging standards that avoid sensitive value leakage.
 - Add route-group error boundaries and not-found pages.
 - Add health check endpoint if deployment infrastructure requires it.
 - Document required environment variables.
+- Document and test production security headers and CSP.
 - Document deployment, migration, seed, backup, and restore workflows.
 - Ensure no secrets are committed.
 
@@ -250,6 +270,7 @@ Prepare the application to be operated in production.
 
 - Missing environment variables fail clearly.
 - Health check works where configured.
+- Representative responses include the expected security headers.
 - Backup/restore expectations are documented.
 - Error boundaries render professional fallback screens.
 
@@ -267,4 +288,3 @@ Prepare the application to be operated in production.
 10. P010 Search Productionization
 11. P011 Test Suite Expansion
 12. P012 Observability and Operations
-
