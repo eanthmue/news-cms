@@ -1,30 +1,50 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# News CMS
+
+A production-grade news portal and integrated Content Management System (CMS) built with Next.js, TypeScript, Tailwind CSS, and Prisma.
+
+## Project Overview
+
+This project is structured using **Vertical Slice Architecture (VSA)** to ensure high cohesion and maintainability. It is divided into two main domains:
+1. **Public News Website** (`app/(public)`): A high-performance, SEO-optimized, and server-rendered news portal utilizing React Server Components (RSC) and Incremental Static Regeneration (ISR).
+2. **Admin CMS** (`app/(admin)`): An interactive, client-side editor interface for managing articles, taxonomies (categories/tags), navigation menus, media, and site settings.
+
+## Tech Stack
+
+- **Framework**: Next.js 14+ (App Router)
+- **Language**: TypeScript (strict mode)
+- **Styling**: Tailwind CSS & shadcn/ui
+- **Database & ORM**: PostgreSQL via Prisma ORM
+- **Authentication**: NextAuth.js (Auth.js) v5
+- **Client State**: TanStack Query v5
+- **Rich Text Editor**: TipTap (ProseMirror-based)
 
 ## Getting Started
 
-First, run the development server:
+1. **Install Dependencies**:
+   ```bash
+   pnpm install
+   ```
 
-```bash
-pnpm dev
-```
+2. **Configure Environment Variables**:
+   Copy `.env.example` to `.env.local` and configure your database and authentication secrets:
+   ```bash
+   cp .env.example .env.local
+   ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+3. **Run Database Migrations**:
+   ```bash
+   pnpm prisma db push
+   ```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+4. **Start the Development Server**:
+   ```bash
+   pnpm dev
+   ```
+   Open [http://localhost:3000](http://localhost:3000) to view the application.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Documentation
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+For full architectural designs, API routes mapping, and user specifications, refer to the [docs/](docs/) directory:
+- [Documentation Index](docs/README.md)
+- [System Overview & Architecture](docs/architecture/01_system_overview/01_overview.md)
+- [Specifications Index](docs/specs/overview.md)

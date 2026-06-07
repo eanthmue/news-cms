@@ -39,6 +39,42 @@ This document defines the complete feature specification for a production-ready 
 
 ---
 
+## Specification Directory Index
+
+This section serves as a directory index of all functional and technical specification documents in `/docs/specs`.
+
+### Public Frontend Specifications (`/docs/specs/01_public_frontend`)
+Detailed requirements for the public-facing news portal (utilizes React Server Components and Incremental Static Regeneration).
+*   [01_homepage.md](01_public_frontend/01_homepage.md): Layout and behavior of the main home page (Featured, Latest, Categories, Trending news, and Header/Footer).
+*   [02_article_detail.md](01_public_frontend/02_article_detail.md): Article details page rendering rich text, badges, author/date info, and dynamic SEO tags.
+*   [03_category_page.md](01_public_frontend/03_category_page.md): Listing view filtering articles by category with pagination.
+*   [04_tag_page.md](01_public_frontend/04_tag_page.md): Listing view filtering articles by tag with pagination.
+*   [05_search_page.md](01_public_frontend/05_search_page.md): Search query interface using PostgreSQL full-text search and pagination.
+*   [06_static_pages.md](01_public_frontend/06_static_pages.md): Standard pages such as About, Contact, Privacy Policy, and Terms.
+*   [07_responsive_design.md](01_public_frontend/07_responsive_design.md): Breakpoints, mobile-first design, interactions, and accessibility rules.
+*   [08_seo_requirements.md](01_public_frontend/08_seo_requirements.md): SEO setup including Sitemap, Robots.txt, Open Graph meta tags, and Web Vitals.
+
+### Admin CMS Specifications (`/docs/specs/02_admin_cms`)
+Detailed requirements for the CMS management interface (utilizes React Client Components, TanStack Query, and REST Route Handlers).
+*   [01_auth_and_user_management.md](02_admin_cms/01_auth_and_user_management.md): Credentials authentication, session persistence, and role-based permissions (Super Admin/Editor).
+*   [02_dashboard.md](02_admin_cms/02_dashboard.md): Quick statistics overview, database item summaries, and shortcut controls.
+*   [03_article_management.md](02_admin_cms/03_article_management.md): Writing workspace, status control (Draft, Published, Archived), validations, and CRUD forms.
+*   [04_rich_text_editor.md](02_admin_cms/04_rich_text_editor.md): TipTap integration, JSON output formatting, image embeds, and HTML sanitization.
+*   [05_media_library.md](02_admin_cms/05_media_library.md): Image/file upload engine, file validation, metadata management, and S3 upload pathing.
+*   [06_category_management.md](02_admin_cms/06_category_management.md): Nested taxonomies, display ordering, and CRUD controls for categories.
+*   [07_tag_management.md](02_admin_cms/07_tag_management.md): Tag management and auto-complete selectors in article editor.
+*   [08_static_page_management.md](02_admin_cms/08_static_page_management.md): CRUD management for static content pages.
+*   [09_navigation_menu_management.md](02_admin_cms/09_navigation_menu_management.md): Dynamic custom menu sorting and header link assignment.
+*   [10_basic_website_settings.md](02_admin_cms/10_basic_website_settings.md): Global settings configuration (brand name, brand asset logo, contact info, standard SEO).
+
+### Phasing & NFR Specifications (`/docs/specs/03_phasing_and_nfr`)
+Rollout strategy, global security constraints, and complete site URLs map.
+*   [01_phasing.md](03_phasing_and_nfr/01_phasing.md): Multi-phase implementation roadmap (Foundation, Content, Public, Config, Hardening).
+*   [02_non_functional_requirements.md](03_phasing_and_nfr/02_non_functional_requirements.md): Core performance requirements, security guidelines (CSRF, headers, validations), and reliability rules.
+*   [03_page_map.md](03_phasing_and_nfr/03_page_map.md): List of all public and administration URL route mappings.
+
+---
+
 ## Technology Decisions
 
 | Concern | Decision |

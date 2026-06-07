@@ -14,7 +14,7 @@ Initialize Prisma ORM and define the initial database schema based on the projec
 
 - Install and initialize Prisma ORM.
 - Configure a database. SQLite may be used only for local MVP experiments; production-readiness work must assume PostgreSQL.
-- Define all models in `schema.prisma` according to `docs/specs/03_data_model.md`:
+- Define all models in `schema.prisma` according to the specifications in `docs/architecture/02_data_model/`:
   - `AdminUser`: email, hashed password, name, role, active status, invitation/reset token fields, failed login/lockout fields, last login, timestamps.
   - `AuditLog`: action, entity metadata, user reference, IP address, user agent, metadata JSON, timestamp.
   - `Article`: title, slug, summary, `bodyContent` as serialized TipTap JSON, media references, category, tags, author, status, publish timestamp, SEO fields, timestamps.
@@ -31,6 +31,6 @@ Initialize Prisma ORM and define the initial database schema based on the projec
 
 1. Run `npx prisma migrate dev --name init` to create the initial database migration.
 2. Verify the configured local database is created and all required tables exist.
-3. Use `npx prisma studio` to inspect the database and confirm the schema matches `docs/specs/03_data_model.md`.
+3. Use `npx prisma studio` to inspect the database and confirm the schema matches `docs/architecture/02_data_model/`.
 4. Run `npx prisma generate` to ensure the Prisma Client is correctly generated.
 5. Confirm the migration includes indexes and relations needed for public reads, admin filtering, auth, and audit logging.
