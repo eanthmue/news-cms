@@ -1,4 +1,4 @@
-# 11. Page Map
+# Page Map
 
 ## Public Pages
 
@@ -21,6 +21,8 @@
 
 ```
 /admin/login                     Login
+/admin/forgot-password           Forgot password
+/admin/reset-password            Reset password
 /admin/dashboard                 Dashboard
 /admin/articles                  Article list
 /admin/articles/create           Create article
@@ -31,5 +33,5 @@
 /admin/pages                     Static page list
 /admin/navigation                Navigation menu editor
 /admin/settings                  Website settings
-/admin/users                     User management (SUPER_ADMIN only)
+/admin/users                     User management (Super Admin only)
 ```

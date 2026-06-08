@@ -1,16 +1,16 @@
-# 9. Priority and Phasing
+# Delivery Phases
 
 ## Phase 1 — Foundation
 
 - Admin layout shell (sidebar navigation, header, responsive)
-- TanStack Query setup for admin
-- Additional UI components (shadcn/ui)
+- Admin data fetching infrastructure
+- Shared UI component library setup
 - Tag management (CRUD)
 
 ## Phase 2 — Content Core
 
 - Media library and image upload
-- Rich text editor (TipTap)
+- Rich text editor
 - Article management (full CRUD with status transitions)
 - Dashboard with live statistics
 
@@ -20,7 +20,7 @@
 - Homepage (featured, latest, category sections, trending)
 - Article detail page with SEO metadata
 - Category and tag listing pages with pagination
-- Search page with PostgreSQL full-text search
+- Search page with full-text search
 - Static pages (About, Contact, Privacy, Terms)
 
 ## Phase 4 — Configuration

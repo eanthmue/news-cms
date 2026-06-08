@@ -1,16 +1,21 @@
-## 1.3 Category Page
+# 1.3 Category Page
 
-### Purpose
+## Purpose
 
 Lists all published articles under a specific category with pagination.
 
-### Rendering
+---
 
-- Server Component with `generateMetadata`.
-- `notFound()` for inactive or missing categories.
-- Paginated: 12 articles per page (configurable).
+## URL Format
 
-### Layout
+```
+/category/{category-slug}
+/category/{category-slug}?page=2
+```
+
+---
+
+## Page Layout
 
 ```
 [Header]
@@ -21,32 +26,42 @@ Lists all published articles under a specific category with pagination.
 [Footer]
 ```
 
-Each article item:
+**Each article item displays:**
 
-- Thumbnail image (`next/image`).
-- Title (linked to article detail).
+- Thumbnail image.
+- Title (linked to article detail page).
 - Short summary (2 lines, truncated).
 - Published date.
 - Author name.
 
-### URL Format
+---
 
-```
-/category/{category-slug}
-/category/{category-slug}?page=2
-```
+## Pagination
 
-### Metadata
+- 12 articles per page (configurable).
+- Pagination controls: next/previous, page numbers.
 
-- Title: `{Category Name} — {Site Name}`
-- Description: category description or fallback.
-- Canonical URL: `/category/{slug}` (without page parameter for page 1).
+---
 
-### Acceptance Criteria
+## Error Handling
 
-- Shows only published articles from the selected category.
-- Articles sorted by `publishedAt` descending.
-- Pagination works correctly (next/previous, page numbers).
-- Empty category shows friendly empty state: "No articles in this category yet."
-- Inactive category returns 404.
-- Responsive grid layout.
+- Inactive or missing categories display a 404 page.
+
+---
+
+## Page Metadata
+
+- **Title**: `{Category Name} — {Site Name}`
+- **Description**: Category description, or a fallback.
+- **Canonical URL**: `/category/{slug}` (without page parameter for page 1).
+
+---
+
+## Acceptance Criteria
+
+- [ ] Shows only published articles from the selected category.
+- [ ] Articles sorted by publish date (newest first).
+- [ ] Pagination works correctly (next/previous, page numbers).
+- [ ] Empty category shows friendly empty state: "No articles in this category yet."
+- [ ] Inactive or missing category returns 404.
+- [ ] Responsive grid layout.

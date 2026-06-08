@@ -1,27 +1,24 @@
 # News Website with CMS — Overview Specification
 
-> Production-grade specification. Implementation must follow `AGENTS.md` and `docs/production-ready-agent-harness.md`.
+> This document defines the complete **functional** specification. Implementation technology choices, architecture decisions, and design system details are documented separately in `/docs/architecture/`.
 
 ## Scope
 
-This document defines the complete feature specification for a production-ready news website with an integrated CMS.
+This specification covers the behavior and capabilities of a production-ready news website with an integrated content management system.
 
 ### Included
 
-- Public news website (server-rendered, SEO-optimized)
-- Admin CMS (client-side interactive UI)
-- Media management
+- Public news website with full-text search and SEO optimization
+- Admin CMS for content creation, editing, and publishing
+- Media management (image upload, organization, and reuse)
 - Content safety and sanitization
-- Authentication and authorization
-- Search
-- SEO and metadata infrastructure
-- Caching and revalidation
-- Error handling and observability
+- Authentication and authorization with role-based access control
+- Global website configuration (branding, navigation, settings)
 
 ### Excluded from this version
 
-- Article scheduling (future: publish at a future date)
-- Review/approval workflow (future: editor submits, admin approves)
+- Article scheduling (publish at a future date)
+- Review/approval workflow (editor submits, admin approves)
 - Paywall or subscription model
 - Reader comments
 - AI-assisted writing or summarization
@@ -30,68 +27,53 @@ This document defines the complete feature specification for a production-ready 
 - Multi-language / i18n support
 - Email newsletter integration
 
-### User Assumptions
+---
 
-- Two admin roles: `SUPER_ADMIN` (full access) and `EDITOR` (content management only).
-- `SUPER_ADMIN` manages users, settings, and navigation.
-- `EDITOR` manages articles, categories, tags, media, and static pages.
-- Public readers are unauthenticated.
+## User Roles
+
+| Role | Description |
+|---|---|
+| **Super Admin** | Full system access — manages users, global settings, navigation, and all content. |
+| **Editor** | Content management — manages articles, categories, tags, media, and static pages. |
+| **Public Reader** | Unauthenticated visitor — browses and reads published content. |
 
 ---
 
 ## Specification Directory Index
 
-This section serves as a directory index of all functional and technical specification documents in `/docs/specs`.
+### Public Frontend (`/docs/specs/01_public_frontend`)
 
-### Public Frontend Specifications (`/docs/specs/01_public_frontend`)
-Detailed requirements for the public-facing news portal (utilizes React Server Components and Incremental Static Regeneration).
-*   [01_homepage.md](01_public_frontend/01_homepage.md): Layout and behavior of the main home page (Featured, Latest, Categories, Trending news, and Header/Footer).
-*   [02_article_detail.md](01_public_frontend/02_article_detail.md): Article details page rendering rich text, badges, author/date info, and dynamic SEO tags.
-*   [03_category_page.md](01_public_frontend/03_category_page.md): Listing view filtering articles by category with pagination.
-*   [04_tag_page.md](01_public_frontend/04_tag_page.md): Listing view filtering articles by tag with pagination.
-*   [05_search_page.md](01_public_frontend/05_search_page.md): Search query interface using PostgreSQL full-text search and pagination.
-*   [06_static_pages.md](01_public_frontend/06_static_pages.md): Standard pages such as About, Contact, Privacy Policy, and Terms.
-*   [07_responsive_design.md](01_public_frontend/07_responsive_design.md): Breakpoints, mobile-first design, interactions, and accessibility rules.
-*   [08_seo_requirements.md](01_public_frontend/08_seo_requirements.md): SEO setup including Sitemap, Robots.txt, Open Graph meta tags, and Web Vitals.
+Specifications for the public-facing news portal visible to all readers.
 
-### Admin CMS Specifications (`/docs/specs/02_admin_cms`)
-Detailed requirements for the CMS management interface (utilizes React Client Components, TanStack Query, and REST Route Handlers).
-*   [01_auth_and_user_management.md](02_admin_cms/01_auth_and_user_management.md): Credentials authentication, session persistence, and role-based permissions (Super Admin/Editor).
-*   [02_dashboard.md](02_admin_cms/02_dashboard.md): Quick statistics overview, database item summaries, and shortcut controls.
-*   [03_article_management.md](02_admin_cms/03_article_management.md): Writing workspace, status control (Draft, Published, Archived), validations, and CRUD forms.
-*   [04_rich_text_editor.md](02_admin_cms/04_rich_text_editor.md): TipTap integration, JSON output formatting, image embeds, and HTML sanitization.
-*   [05_media_library.md](02_admin_cms/05_media_library.md): Image/file upload engine, file validation, metadata management, and S3 upload pathing.
-*   [06_category_management.md](02_admin_cms/06_category_management.md): Nested taxonomies, display ordering, and CRUD controls for categories.
-*   [07_tag_management.md](02_admin_cms/07_tag_management.md): Tag management and auto-complete selectors in article editor.
-*   [08_static_page_management.md](02_admin_cms/08_static_page_management.md): CRUD management for static content pages.
-*   [09_navigation_menu_management.md](02_admin_cms/09_navigation_menu_management.md): Dynamic custom menu sorting and header link assignment.
-*   [10_basic_website_settings.md](02_admin_cms/10_basic_website_settings.md): Global settings configuration (brand name, brand asset logo, contact info, standard SEO).
+- [01_homepage.md](01_public_frontend/01_homepage.md): Homepage layout and content sections (featured news, latest articles, category highlights, trending).
+- [02_article_detail.md](01_public_frontend/02_article_detail.md): Full article view with rich content, metadata, social sharing, and related articles.
+- [03_category_page.md](01_public_frontend/03_category_page.md): Paginated article listing filtered by category.
+- [04_tag_page.md](01_public_frontend/04_tag_page.md): Paginated article listing filtered by tag.
+- [05_search_page.md](01_public_frontend/05_search_page.md): Keyword search with ranked results and pagination.
+- [06_static_pages.md](01_public_frontend/06_static_pages.md): Standard informational pages (About, Contact, Privacy, Terms).
+- [07_responsive_design.md](01_public_frontend/07_responsive_design.md): Responsive layout requirements and accessibility rules.
+- [08_seo_requirements.md](01_public_frontend/08_seo_requirements.md): SEO infrastructure including sitemap, robots, metadata, and URL structure.
 
-### Phasing & NFR Specifications (`/docs/specs/03_phasing_and_nfr`)
-Rollout strategy, global security constraints, and complete site URLs map.
-*   [01_phasing.md](03_phasing_and_nfr/01_phasing.md): Multi-phase implementation roadmap (Foundation, Content, Public, Config, Hardening).
-*   [02_non_functional_requirements.md](03_phasing_and_nfr/02_non_functional_requirements.md): Core performance requirements, security guidelines (CSRF, headers, validations), and reliability rules.
-*   [03_page_map.md](03_phasing_and_nfr/03_page_map.md): List of all public and administration URL route mappings.
+### Admin CMS (`/docs/specs/02_admin_cms`)
 
----
+Specifications for the authenticated content management interface.
 
-## Technology Decisions
+- [01_auth_and_user_management.md](02_admin_cms/01_auth_and_user_management.md): Login, logout, password recovery, session management, and user administration.
+- [02_dashboard.md](02_admin_cms/02_dashboard.md): Overview dashboard with content statistics and recent activity.
+- [03_article_management.md](02_admin_cms/03_article_management.md): Article CRUD, status workflow (Draft → Published → Archived), list and editor views.
+- [04_rich_text_editor.md](02_admin_cms/04_rich_text_editor.md): WYSIWYG content editing with formatting, images, links, and video embeds.
+- [05_media_library.md](02_admin_cms/05_media_library.md): Image upload, browsing, metadata editing, and reuse across the CMS.
+- [06_category_management.md](02_admin_cms/06_category_management.md): Category CRUD, ordering, and activation/deactivation.
+- [07_tag_management.md](02_admin_cms/07_tag_management.md): Tag CRUD, article association, and inline creation.
+- [08_static_page_management.md](02_admin_cms/08_static_page_management.md): Static page CRUD with rich text content and publish/draft states.
+- [09_navigation_menu_management.md](02_admin_cms/09_navigation_menu_management.md): Dynamic website navigation menu configuration.
+- [10_basic_website_settings.md](02_admin_cms/10_basic_website_settings.md): Global website branding, SEO defaults, and social media configuration.
 
-| Concern | Decision |
-|---|---|
-| Framework | Next.js 16+ (App Router) |
-| Language | TypeScript (strict mode) |
-| Styling | Tailwind CSS + shadcn/ui component library |
-| Icons | Lucide React |
-| Database | PostgreSQL via Prisma ORM |
-| Authentication | NextAuth.js v5 (Auth.js) with Credentials provider |
-| Admin server state | TanStack Query v5 |
-| Rich text editor | TipTap (ProseMirror-based), stored as structured JSON |
-| Form validation | Zod |
-| Media storage | Local filesystem (development), S3-compatible (production) |
-| Search | PostgreSQL full-text search |
-| Testing | Vitest, React Testing Library, Playwright |
-| Package manager | pnpm |
+### Cross-Cutting Concerns (`/docs/specs/03_phasing_and_nfr`)
+
+- [01_phasing.md](03_phasing_and_nfr/01_phasing.md): Multi-phase delivery roadmap.
+- [02_non_functional_requirements.md](03_phasing_and_nfr/02_non_functional_requirements.md): Performance, security, reliability, and maintainability requirements.
+- [03_page_map.md](03_phasing_and_nfr/03_page_map.md): Complete URL map for all public and admin routes.
 
 ---
 
@@ -99,57 +81,40 @@ Rollout strategy, global security constraints, and complete site URLs map.
 
 ### Typography
 
-- Use a professional sans-serif font stack via `next/font` (e.g., Inter, Geist, or similar).
-- Heading hierarchy must be semantic: one `<h1>` per page, followed by `<h2>`, `<h3>` in order.
-- Body text: 16px minimum on all breakpoints.
+- Professional sans-serif font family.
+- Semantic heading hierarchy: one `<h1>` per page, followed by `<h2>`, `<h3>` in order.
+- Body text: 16px minimum on all screen sizes.
 - Line height: 1.6 for body text, 1.2 for headings.
 
 ### Color Palette
 
-- Define a consistent palette using CSS custom properties or Tailwind theme extension.
-- Support light and dark mode via `prefers-color-scheme` and manual toggle.
-- Use distinct color tokens for: primary, secondary, accent, destructive, muted, background, foreground, border, card, popover.
+- Consistent palette with named color tokens: primary, secondary, accent, destructive, muted, background, foreground, border, card, popover.
+- Light and dark mode support (user preference detection and manual toggle).
 - Status colors: draft (amber/yellow), published (green), archived (gray/slate).
 
 ### Spacing and Layout
 
-- Use an 8px spacing scale consistently.
-- Maximum content width: 1280px for admin, 768px for article body, 1200px for public layouts.
-- Responsive breakpoints: mobile (<640px), tablet (640px–1024px), desktop (>1024px).
-
-### Component Library
-
-Use shadcn/ui for all admin UI primitives. Required components:
-
-- Button, Input, Textarea, Label, Select
-- Dialog, Sheet, Popover, Dropdown Menu
-- Table, Pagination
-- Card, Badge, Separator
-- Tabs, Switch, Checkbox
-- Toast / Sonner (notifications)
-- Skeleton (loading states)
-- Command (searchable combobox for tags/categories)
-- Alert (error/success/warning messages)
+- Consistent 8px spacing scale.
+- Maximum content widths: 1280px (admin), 768px (article body), 1200px (public layouts).
+- Responsive breakpoints: mobile (<640px), tablet (640–1024px), desktop (>1024px).
 
 ### Accessibility
 
 - All interactive elements must be keyboard-navigable.
 - Form inputs must have associated labels.
 - Color contrast must meet WCAG 2.1 AA standards.
-- Images must have alt text (sourced from media metadata).
+- All images must have alt text.
 - Focus indicators must be visible.
-- Screen reader announcements for toast notifications and dialog state changes.
+- Screen reader announcements for notifications and dialog state changes.
 
 ---
 
 ## Summary
 
-This specification defines a production-grade news website with CMS that prioritizes:
+This specification defines a news website with CMS that prioritizes:
 
-- **Performance**: server-rendered public pages, ISR caching, optimized images.
+- **Performance**: fast page loads, optimized images, paginated content.
 - **SEO**: dynamic metadata, sitemap, robots, Open Graph, structured URLs.
-- **Security**: authenticated admin, role-based access, input validation, content sanitization, audit logging.
-- **Usability**: rich text editing, media management, intuitive article workflow, responsive design.
-- **Maintainability**: TypeScript, Vertical Slice Architecture, consistent API contracts, testing.
-
-The system is designed for future expansion into article scheduling, approval workflows, analytics, multi-language support, and monetization features.
+- **Security**: authenticated admin, role-based access, input validation, content sanitization.
+- **Usability**: rich text editing, media management, intuitive content workflow, responsive design.
+- **Extensibility**: designed for future expansion into scheduling, approval workflows, analytics, multi-language support, and monetization.

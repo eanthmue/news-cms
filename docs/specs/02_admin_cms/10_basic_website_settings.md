@@ -1,33 +1,37 @@
-## 2.10 Basic Website Settings
+# 2.10 Website Settings
 
-### Purpose
+## Purpose
 
 Admin can configure global website information displayed across the public site.
 
-### Functional Requirements
+---
 
-Admin can update:
+## Configurable Settings
 
 | Setting | Type | Notes |
 |---|---|---|
-| Website Name | String | Displayed in header, footer, metadata title template |
+| Website Name | Text | Displayed in header, footer, and page title template |
 | Logo | Media reference | Displayed in header. Selected from Media Library. |
 | Favicon | Media reference | Browser tab icon |
-| Default SEO Title | String | Fallback `<title>` when page-specific title is absent |
-| Default SEO Description | String | Fallback meta description |
-| Contact Email | String | Displayed on contact page / footer |
-| Social Media Links | JSON Array | Array of `{ platform, url }`. Platforms: Facebook, Twitter/X, Instagram, LinkedIn, YouTube |
+| Default SEO Title | Text | Fallback page title when page-specific title is absent |
+| Default SEO Description | Text | Fallback meta description |
+| Contact Email | Text | Displayed on contact page and/or footer |
+| Social Media Links | List | Array of `{ platform, url }`. Platforms: Facebook, Twitter/X, Instagram, LinkedIn, YouTube |
 
-### Settings Behavior
+---
 
-- Settings are a single-row table (one record for the entire site).
-- On first load, if no settings record exists, create one with defaults.
-- All fields are optional — the site should function with empty settings (using sensible defaults).
-- Settings changes trigger revalidation of all public pages (since header/footer/metadata may change).
+## Behavior
 
-### Acceptance Criteria
+- Settings are stored as a single record for the entire site.
+- On first load, if no settings record exists, one is created with sensible defaults.
+- All fields are optional — the site functions with empty settings using defaults.
+- Settings changes trigger revalidation of all public pages (since header, footer, and metadata may change).
 
-- Updated logo appears in public header.
-- Updated website name appears in page metadata title template.
-- Social media links appear in public footer.
-- Changes reflect on the public website after revalidation.
+---
+
+## Acceptance Criteria
+
+- [ ] Updated logo appears in the public header.
+- [ ] Updated website name appears in page title template.
+- [ ] Social media links appear in the public footer.
+- [ ] Changes reflect on the public website after revalidation.

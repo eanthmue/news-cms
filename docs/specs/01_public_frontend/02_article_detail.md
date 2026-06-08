@@ -1,25 +1,28 @@
-## 1.2 Article Detail Page
+# 1.2 Article Detail Page
 
-### Purpose
+## Purpose
 
-Displays the complete news article with full content, metadata, and related articles.
+Displays the complete news article with full content, metadata, social sharing options, and related articles.
 
-### Rendering
+---
 
-- Server Component with `generateMetadata`.
-- Data fetched via cached service: `getArticleBySlug(slug)`.
-- `notFound()` returned for missing, unpublished, draft, or archived articles.
-- ISR with revalidation (default: 60 seconds) or on-demand revalidation after publish/unpublish.
+## URL Format
 
-### Layout
+```
+/news/{article-slug}
+```
+
+---
+
+## Page Layout
 
 ```
 [Header]
-[Category Badge] [Published Date] [Author]
+[Category Badge]  [Published Date]  [Author]
 [Article Title — H1]
 [Article Summary — subtitle/lead paragraph]
-[Featured Image — full width, captioned]
-[Article Body — rich text rendered content]
+[Featured Image — full width, with caption]
+[Article Body — rendered rich text content]
 [Tags — clickable tag badges]
 [Social Sharing Buttons]
 [Separator]
@@ -27,73 +30,64 @@ Displays the complete news article with full content, metadata, and related arti
 [Footer]
 ```
 
-### Article Body Rendering
+---
 
-The article body is stored as TipTap JSON. It must be rendered server-side through a controlled renderer that:
+## Article Body Rendering
 
-- Converts TipTap JSON to sanitized HTML.
-- Supports: paragraphs, headings (H1–H3), bold, italic, strikethrough, bullet lists, ordered lists, blockquotes, images (with `next/image`, alt text, and optional caption), links (with `rel="noopener noreferrer"` for external), embedded videos (YouTube/Vimeo via allowlisted embed providers), code blocks, horizontal rules.
-- Strips: `<script>`, event handler attributes, `javascript:` URLs, data URLs, and any tags/attributes not in the allowlist.
-- Applies consistent typography styles: proper spacing between elements, responsive images, readable line length (max 65–75 characters per line).
+The article body is stored as structured JSON. The rendering must:
 
-### Related Articles
+- Convert structured content to safe HTML.
+- Support: paragraphs, headings (H2–H3), bold, italic, strikethrough, bullet lists, ordered lists, blockquotes, images (with alt text and optional caption), links (external links open in new tab), embedded videos (YouTube/Vimeo only), code blocks, horizontal rules.
+- Strip all unsafe content: `<script>` tags, event handler attributes, `javascript:` URLs, `data:` URLs, and any tags/attributes not in an allowlist.
+- Apply consistent typography: proper spacing, responsive images, readable line length (max 65–75 characters per line).
 
-Display 3–4 articles from the same category, excluding the current article. Sorted by `publishedAt` descending.
+---
 
-Each related article: thumbnail, title (linked), category, published date.
+## Related Articles
 
-### Social Sharing
+- Display 3–4 articles from the same category, excluding the current article.
+- Sorted by publish date (newest first).
+- Each article shows: thumbnail, title (linked), category, published date.
+
+---
+
+## Social Sharing
 
 Buttons for: Twitter/X, Facebook, LinkedIn, Copy Link.
 
-Use share URL format (no third-party SDK required):
+- **Twitter**: Share URL with article title.
+- **Facebook**: Share URL.
+- **LinkedIn**: Share URL.
+- **Copy Link**: Copy canonical URL to clipboard with confirmation feedback.
+- All share links open in a new tab.
 
-- Twitter: `https://twitter.com/intent/tweet?url={url}&text={title}`
-- Facebook: `https://www.facebook.com/sharer/sharer.php?u={url}`
-- LinkedIn: `https://www.linkedin.com/sharing/share-offsite/?url={url}`
-- Copy Link: copy canonical URL to clipboard with confirmation toast.
+---
 
-Open in new tab with `rel="noopener noreferrer"`.
+## Error Handling
 
-### URL Format
+- Missing, unpublished, draft, or archived articles display a 404 page.
 
-```
-/news/{article-slug}
-```
+---
 
-### Metadata
+## Page Metadata
 
-```ts
-export async function generateMetadata({ params }): Promise<Metadata> {
-  const article = await getArticleBySlug(params.slug);
-  if (!article) return {};
-  return {
-    title: article.seoTitle || article.title,
-    description: article.seoDescription || article.summary,
-    openGraph: {
-      title: article.seoTitle || article.title,
-      description: article.seoDescription || article.summary,
-      type: 'article',
-      publishedTime: article.publishedAt,
-      authors: [article.authorName],
-      images: [article.ogImage?.fileUrl || article.featuredImage?.fileUrl],
-      url: `/news/${article.slug}`,
-    },
-    twitter: { card: 'summary_large_image' },
-    alternates: { canonical: `/news/${article.slug}` },
-  };
-}
-```
+- **Title**: Article SEO title (or article title as fallback).
+- **Description**: Article SEO description (or summary as fallback).
+- **Open Graph**: Type `article`, published time, author, article image, canonical URL.
+- **Twitter Card**: Summary with large image.
+- **Canonical URL**: `/news/{article-slug}`
 
-### Acceptance Criteria
+---
 
-- Article page displays complete content server-rendered (visible in page source).
-- URL is SEO-friendly: `/news/{slug}`.
-- Featured image displays correctly with alt text.
-- Tags and category are clickable, linking to their respective pages.
-- Related articles are shown below the content.
-- Social sharing buttons work correctly.
-- Draft, archived, and unpublished articles return 404.
-- Open Graph metadata renders correctly when shared on social platforms.
-- Article body is sanitized — no XSS vectors in rendered HTML.
-- Page is responsive on all breakpoints.
+## Acceptance Criteria
+
+- [ ] Article page displays complete content on initial page load.
+- [ ] URL follows the pattern `/news/{slug}`.
+- [ ] Featured image displays with alt text.
+- [ ] Tags and category are clickable, linking to their respective pages.
+- [ ] Related articles are shown below the content.
+- [ ] Social sharing buttons work correctly.
+- [ ] Draft, archived, and unpublished articles return 404.
+- [ ] Open Graph metadata renders correctly when shared on social platforms.
+- [ ] Article body is sanitized — no XSS vectors in rendered HTML.
+- [ ] Page is responsive on all breakpoints.

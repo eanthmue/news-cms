@@ -1,40 +1,55 @@
-## 2.2 Dashboard
+# 2.2 Dashboard
 
-### Purpose
+## Purpose
 
-Gives the admin a quick overview of content status and recent activity.
+Gives the admin a quick overview of content status and recent activity upon login.
 
-### Functional Requirements
+---
 
-Dashboard displays live statistics:
+## Content Statistics
+
+The dashboard displays live counts of:
 
 - Total articles (all statuses)
-- Published articles count
-- Draft articles count
-- Archived articles count
+- Published articles
+- Draft articles
+- Archived articles
 - Total categories
 - Total tags
 - Total media items
 
-Recent activity section:
+---
 
-- Last 10 articles (title, status badge, updated date, linked to edit page).
-- Quick action buttons: "New Article", "New Category".
+## Recent Activity
 
-### Data Fetching
+- Last 10 articles: title, status badge, last updated date, linked to the article's edit page.
 
-- Aggregated stats via `GET /api/admin/dashboard`.
-- TanStack Query with appropriate `staleTime` (30 seconds).
+---
 
-### URL
+## Quick Actions
+
+- "New Article" button.
+- "New Category" button.
+
+---
+
+## Loading State
+
+- Dashboard shows skeleton placeholders while data is loading.
+
+---
+
+## URL
 
 ```
 /admin/dashboard
 ```
 
-### Acceptance Criteria
+---
 
-- Dashboard loads after successful login.
-- Statistics reflect current database state.
-- Recent articles link to their edit pages.
-- Loading state shows skeleton placeholders.
+## Acceptance Criteria
+
+- [ ] Dashboard loads after successful login.
+- [ ] Statistics reflect the current state of the database.
+- [ ] Recent articles link to their edit pages.
+- [ ] Loading state shows skeleton placeholders.
