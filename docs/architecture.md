@@ -87,6 +87,7 @@ graph TD
 ### 3.1 Public Website (Server-Side Performance)
 All reader-facing pages are built as **React Server Components (RSC)** with static/incremental revalidation to optimize Core Web Vitals and crawlability.
 *   **Key Routes:** `/`, `/news/[slug]`, `/category/[slug]`, `/tag/[slug]`, `/search`, static pages (`/about`, etc.), `/sitemap.xml`, and `/robots.txt`.
+*   **Async Routing Parameters (Next.js 16+):** In Next.js 16+, routing parameters (`params`) and search query parameters (`searchParams`) passed to Pages, Layouts, and the Metadata API (such as `generateMetadata`) are Promises. They must be explicitly awaited (e.g. `const { slug } = await params;`) before reading their properties. In Client Components, they must be unwrapped using React 19's `use()` hook.
 *   **Data Retrieval:** Fetched directly from server-side services or cached database queries using Prisma. Under no circumstances are public page reads forced through internal REST round-trips (unless an external client API is required).
 *   **SEO:** Leverages Next.js Metadata API from Server Components (`generateMetadata`) to export Og/Twitter cards, canonical URLs, and responsive image alt tags.
 
@@ -102,7 +103,7 @@ All editor and manager screens are built using **Client Components** (`"use clie
 
 ### 4.1 Data Query Flow
 *   **Public Read Flow:**
-    1. Server Component receives route parameters (e.g., `slug`).
+    1. Server Component receives route parameters Promise (`params`) and awaits it to extract the key value (e.g., `slug`).
     2. Server-side service validates parameters.
     3. Prisma executes query filtering only for published, non-archived, and active content.
     4. React `cache()` is utilized to deduplicate queries between `generateMetadata` and component rendering.
@@ -206,6 +207,9 @@ The system is engineered to meet Core Web Vitals requirements (Targeting Lightho
 *   **On-Demand ISR Revalidation:**
     *   Homepage, article pages, and listings are statically generated.
     *   When an editor changes the status of an article (published, draft, archived) or updates navigation menus, the CMS triggers revalidation tags/paths. This keeps page loads sub-second while ensuring updates are reflected almost instantly.
+*   **Next.js 16+ Caching Defaults:**
+    *   `fetch` requests and GET Route Handlers are uncached by default.
+    *   To enable caching for statically generated content and to leverage the Next.js cache, components and route handlers must explicitly opt-in (e.g. using `{ cache: 'force-cache' }` or configuring revalidation tags).
 *   **Database Search:**
     *   Search operations query only published articles.
     *   Powered by PostgreSQL full-text search indexing, matching against article titles, summaries, and HTML bodies, sorting by relevancy score and `publishedAt desc`.

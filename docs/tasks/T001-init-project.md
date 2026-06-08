@@ -10,7 +10,7 @@ Set up a new Next.js project with TypeScript, Tailwind CSS, and basic linting/fo
 
 ## Requirements
 
-- Initialize a Next.js 14+ project using the App Router.
+- Initialize a Next.js 16+ project using the App Router.
 - Enable TypeScript for type safety.
 - Configure Tailwind CSS for styling.
 - Set up ESLint and Prettier for code quality and consistent formatting.

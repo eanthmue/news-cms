@@ -25,3 +25,8 @@ Content mutations that trigger revalidation:
 - Settings: any change (affects public header, footer, metadata)
 - Static Page: publish, unpublish, update, delete
 - Media: metadata update (alt text of media used in published content)
+
+### Next.js 16+ Caching Defaults
+In Next.js 16+, `fetch` requests and GET Route Handlers are no longer cached by default. To utilize the static generation and ISR caching strategies listed above, you must:
+1. **Explicit Caching:** Specify `cache: 'force-cache'` or use `next: { revalidate: 60 }` / `next: { tags: ['tag-name'] }` inside fetch requests or server-side database service logic.
+2. **GET Route Handlers:** Export `const dynamic = 'force-static'` or use appropriate caching parameters if the handler is intended to be static and cached. Otherwise, Route Handlers remain dynamic by default.

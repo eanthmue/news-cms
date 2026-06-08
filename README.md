@@ -10,7 +10,7 @@ This project is structured using **Vertical Slice Architecture (VSA)** to ensure
 
 ## Tech Stack
 
-- **Framework**: Next.js 14+ (App Router)
+- **Framework**: Next.js 16+ (App Router)
 - **Language**: TypeScript (strict mode)
 - **Styling**: Tailwind CSS & shadcn/ui
 - **Database & ORM**: PostgreSQL via Prisma ORM
@@ -46,5 +46,5 @@ This project is structured using **Vertical Slice Architecture (VSA)** to ensure
 
 For full architectural designs, API routes mapping, and user specifications, refer to the [docs/](docs/) directory:
 - [Documentation Index](docs/README.md)
-- [System Overview & Architecture](docs/architecture/01_system_overview/01_overview.md)
+- [System Overview & Architecture](docs/architecture/overview.md)
 - [Specifications Index](docs/specs/overview.md)

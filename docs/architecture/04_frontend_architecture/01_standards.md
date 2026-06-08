@@ -14,6 +14,7 @@ By default, all components in the Next.js App Router are Server Components unles
 - **Rules & Restrictions:**
   - **No React Hooks:** Do not use `useState`, `useEffect`, `useContext`, or custom hooks that rely on client state.
   - **No Browser APIs:** Do not access `window`, `document`, `localStorage`, or perform client-side event handling (e.g., `onClick`).
+  - **Async Routing Parameters:** Route parameters (`params`) and search query parameters (`searchParams`) in layouts, page components, and metadata generation are Promises. Await them before reading their properties (e.g., `const { slug } = await params;`).
   - **Direct Data Fetching:** Fetch database data directly using database services (e.g., `features/articles/services/get-article.ts`) via Prisma client. Bypassing HTTP REST requests speeds up TTFB (Time to First Byte).
   - **Deduplication:** Wrap data-fetching calls in React `cache()` if the same data is needed in both `generateMetadata` and the component render.
 
@@ -22,6 +23,8 @@ Marked with the `"use client"` directive at the very top of the file.
 - **Where to Use:** Admin dashboards, text editors, modals/dialogs, forms, interactive tabs, search inputs.
 - **Rules & Guidelines:**
   - **Client-Side State:** Use standard React hooks (`useState`, `useReducer`, `useRef`) or global state wrappers.
+  - **Consuming Promises (React 19):** To read route parameters (`params` or `searchParams` passed down as Promises) in a client component, unwrap them using React 19's `use()` hook (e.g., `const { slug } = React.use(params);`).
+  - **Form Mutations:** Use React 19's `useActionState` (which replaces `useFormState`) and `useFormStatus` to handle form actions and submission pending state natively.
   - **TanStack Query:** Use `@tanstack/react-query` to fetch, cache, and mutate data against `/api/admin` Route Handlers. Do not write bare `fetch()` inside `useEffect()` for standard operations.
   - **Leaf-Node Strategy:** Keep client components as far down the component tree as possible. An RSC layout should wrap a page, with interactive buttons or forms inserted as small client component leaves, saving the bulk of the page from being sent to client bundle processing.
 

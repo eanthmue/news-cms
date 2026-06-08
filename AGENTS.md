@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-A news website with a CMS built using Next.js 14+ (App Router), TypeScript, Tailwind CSS, and Prisma.
+A news website with a CMS built using Next.js 16+ (App Router), TypeScript, Tailwind CSS, and Prisma.
 
 ## Architecture
 
@@ -15,12 +15,14 @@ A news website with a CMS built using Next.js 14+ (App Router), TypeScript, Tail
   - Public reader-facing pages should use Server Components, static generation/ISR, and Metadata API where appropriate.
   - Admin CMS screens should use Client Components for interactive UI.
   - Add `"use client";` only to components that need client-side React features.
+  - In Next.js 16+, dynamic route parameters (`params`) and search query parameters (`searchParams`) passed to pages, layouts, and `generateMetadata` are Promises and must be awaited (e.g., `const { slug } = await params;`) before accessing their properties. In Client Components, they must be unwrapped using React 19's `use()` hook.
 - **Backend:** Admin data fetching and mutations must go through **Route Handlers** (API routes in `app/api/`). Public reader-facing pages may fetch directly from server-side services or cached repository functions, as defined in the production harness.
 - **State Management:** Use TanStack Query for routine admin server-state fetching. Use standard React hooks for local UI state.
+- **Caching & Route Handlers:** Next.js 16+ does not cache `fetch` requests or GET Route Handlers by default. Explicitly configure cache and revalidation (e.g. `force-cache` or `next: { tags: [...] }`) when static/revalidated behavior is desired.
 
 ## Tech Stack
 
-- **Framework:** Next.js 14+ (App Router)
+- **Framework:** Next.js 16+ (App Router)
 - **Language:** TypeScript
 - **Styling:** Tailwind CSS, shadcn/ui
 - **Icons:** Lucide React

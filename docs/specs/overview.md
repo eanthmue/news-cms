@@ -79,7 +79,7 @@ Rollout strategy, global security constraints, and complete site URLs map.
 
 | Concern | Decision |
 |---|---|
-| Framework | Next.js 14+ (App Router) |
+| Framework | Next.js 16+ (App Router) |
 | Language | TypeScript (strict mode) |
 | Styling | Tailwind CSS + shadcn/ui component library |
 | Icons | Lucide React |
