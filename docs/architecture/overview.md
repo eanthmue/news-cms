@@ -1,127 +1,140 @@
-# System Overview & Structural Architecture
+# System Overview and Structural Architecture
 
-This document provides a detailed description of the News CMS structural design, architectural patterns, and rendering strategies. It serves as the foundation for the project's technical layout.
-
----
+This document describes the News CMS structural design, architectural patterns, rendering strategy, and production reliability boundaries. The detailed standards live in the sub-documents under `docs/architecture/`.
 
 ## Architectural Documentation Index
 
-This index organizes the core technical specifications and standards for the News CMS architecture. Use the links below to navigate the sub-modules:
-
 ### 1. System Overview
-* [overview.md](./overview.md) (This document): Overall system design, Vertical Slice Architecture (VSA) structure, directory layout, and hybrid Next.js rendering strategies.
+
+- [overview.md](./overview.md): Overall system design, Vertical Slice Architecture structure, directory layout, and hybrid Next.js rendering strategy.
 
 ### 2. Data Model
-* [01_entity_overview.md](./02_data_model/01_entity_overview.md): High-level entity-relationship diagram and overview of system schemas.
-* [02_schemas.md](./02_data_model/02_schemas.md): Detailed database schemas, models, fields, and index definitions for Prisma/PostgreSQL.
+
+- [01_entity_overview.md](./02_data_model/01_entity_overview.md): Entity relationships and cross-cutting persistence rules.
+- [02_schemas.md](./02_data_model/02_schemas.md): Production schema targets, indexes, auditability, session, token, media, and revalidation models.
 
 ### 3. API and Data Flow
-* [01_standards.md](./03_api_and_data_flow/01_standards.md): Global API response standards, error envelopes, and HTTP status code mappings.
-* [02_endpoints.md](./03_api_and_data_flow/02_endpoints.md): Complete catalog of administrative and public API endpoints, authentication requirements, and mutation scopes.
+
+- [01_standards.md](./03_api_and_data_flow/01_standards.md): API envelope, HTTP status mapping, handler requirements, and idempotency.
+- [02_endpoints.md](./03_api_and_data_flow/02_endpoints.md): Admin/public endpoint catalog, auth requirements, mutation scopes, and draft preview.
 
 ### 4. Frontend Architecture
-* [01_standards.md](./04_frontend_architecture/01_standards.md): Standards for React Server Components (RSC) vs. Client Components (RCC) boundaries, styling tokens, lazy-loading/code-splitting, and core web vitals optimization.
 
-### 5. Security & Authentication
-* [01_standards.md](./05_security_and_auth/01_standards.md): Session management configurations, Role-Based Access Control (RBAC), CSRF protection, and media upload validation.
+- [01_standards.md](./04_frontend_architecture/01_standards.md): Server/Client Component boundaries, styling, code splitting, and asset performance.
 
-### 6. Infrastructure & Deployment
-* [01_content_safety.md](./06_infrastructure_and_deployment/01_content_safety.md): Server-side TipTap HTML rendering guidelines and content sanitization policies (XSS protection).
-* [02_caching_and_revalidation.md](./06_infrastructure_and_deployment/02_caching_and_revalidation.md): Caching behavior for public paths, Incremental Static Regeneration (ISR) configuration, and revalidation hooks.
-* [03_error_handling.md](./06_infrastructure_and_deployment/03_error_handling.md): User-friendly public and admin error skeletons, route-level fallback handlers, and API logging parameters.
-* [04_audit_logging.md](./06_infrastructure_and_deployment/04_audit_logging.md): Tracking matrices for administrative mutations, active events, and payload metadata fields.
+### 5. Security and Authentication
 
----
+- [01_standards.md](./05_security_and_auth/01_standards.md): Database-backed sessions, RBAC, MFA, CSRF, headers, content safety, and upload security.
 
-## 1. Architectural Philosophy: Vertical Slice Architecture (VSA)
+### 6. Infrastructure and Deployment
 
-Unlike traditional Layered Architecture (which groups files by technical role, e.g., all controllers, all models, all components together), this project adheres strictly to **Vertical Slice Architecture (VSA)**. 
+- [01_content_safety.md](./06_infrastructure_and_deployment/01_content_safety.md): TipTap rendering, sanitizer policy, embed restrictions, image/class/link policy.
+- [02_caching_and_revalidation.md](./06_infrastructure_and_deployment/02_caching_and_revalidation.md): ISR/cache behavior, durable revalidation jobs, and multi-instance cache concerns.
+- [03_error_handling.md](./06_infrastructure_and_deployment/03_error_handling.md): User-safe errors, structured logging, metrics, alerts, health checks, and operating docs.
+- [04_audit_logging.md](./06_infrastructure_and_deployment/04_audit_logging.md): Required audit events, integrity, retention, failure behavior, and access control.
+
+## 1. Architectural Philosophy: Vertical Slice Architecture
+
+The project uses Vertical Slice Architecture (VSA). Business behavior is organized by domain rather than by technical layer, while truly cross-cutting infrastructure lives in `lib/`.
 
 ### Why VSA?
-- **High Cohesion, Low Coupling:** Files that change together are located together. A change to the "articles" feature requires editing files within the `features/articles/` directory, rather than hopping across multiple global folders.
-- **Maintainability:** Developers can understand a business domain's full context (types, database access, components, custom hooks) by looking at a single slice directory.
-- **Scalability:** New features can be added as self-contained directories without risking side-effects or bloat in shared global folders.
 
-```text
-┌──────────────────────────────────────────────────────────┐
-│                      app/ Router                         │
-│   (Maps URL routes and handles request/response flow)     │
-└────────────────────────────┬─────────────────────────────┘
-                             │ Delegates to
-┌────────────────────────────▼─────────────────────────────┐
-│                    features/[slice]/                     │
-│   (Colocated domain components, hooks, services, types)   │
-└────────────────────────────┬─────────────────────────────┘
-                             │ Uses
-┌────────────────────────────▼─────────────────────────────┐
-│                 components/ui/ & lib/                    │
-│      (Business-agnostic primitives & shared utilities)    │
-└──────────────────────────────────────────────────────────┘
-```
+- Files that change together stay together.
+- Developers can understand a business domain by reading one feature slice.
+- New domains can be added without turning shared folders into dumping grounds.
 
 ### Feature Slice Structure
-Each directory in `/features` is organized as follows:
-- `components/`: Feature-specific UI components (e.g., `ArticleEditor.tsx`, `CategorySelect.tsx`).
-- `hooks/`: React Hooks specific to this business domain (e.g., `useArticleMutations.ts`).
-- `services/`: Server-side data fetching, database operations, or business rules.
-- `types.ts` or `types/`: TypeScript definitions scoped to the slice.
-- `schemas.ts` or `validation.ts`: Zod schemas for input validation.
 
----
+Each directory in `/features` follows this shape where relevant:
 
-## 2. Directory Layout & Organization
+```text
+features/[feature]/
+  components/
+  hooks/
+  services/
+  schemas/
+  types/
+  index.ts
+```
 
-The codebase is organized into key root directories:
+Rules:
+
+- `index.ts` is the public API for a feature slice.
+- Cross-feature imports should prefer public exports rather than deep private paths.
+- Server-side services may use Prisma only through approved repositories/DAL helpers when authorization or non-public data is involved.
+- Shared UI primitives stay in `components/ui` and contain no business logic.
+
+## 2. Directory Layout
 
 ```text
 news-cms/
-├── app/                       # App Router Routing Layer
-│   ├── (public)/              # Reader-facing public route group
-│   ├── (admin)/               # CMS admin route group
-│   └── api/                   # REST Route Handlers (/api/admin/...)
-├── features/                  # Business Domain Slices (VSA)
-│   ├── articles/              # Article creation, listing, editing, publishing
-│   ├── categories/            # Category taxonomy
-│   ├── tags/                  # Tag taxonomy
-│   ├── media/                 # Asset management, upload verification, S3 wrapper
-│   ├── auth/                  # Identity, NextAuth wrappers, session utils
-│   ├── users/                 # Admin user directory
-│   ├── navigation/            # Custom site header menus
-│   ├── settings/              # Website configuration (logo, metadata defaults)
-│   └── public-content/        # Public-facing data fetching & layout wrappers
-├── components/
-│   └── ui/                    # Reusable shadcn/ui primitives (Button, Input, Dialog)
-├── lib/                       # Shared utility library
-│   ├── db.ts                  # Shared Prisma client instance
-│   ├── auth/                  # Global auth helpers
-│   └── cache/                 # Caching and invalidation wrappers
-└── prisma/                    # Database configuration
-    └── schema.prisma          # PostgreSQL schema and models
+  app/
+    (public)/
+    (admin)/
+    api/
+  features/
+    articles/
+    categories/
+    tags/
+    media/
+    auth/
+    users/
+    navigation/
+    settings/
+    public-content/
+  components/
+    ui/
+  lib/
+    api/
+    auth/
+    audit/
+    cache/
+    dal/
+    db.ts
+    logging/
+    seo/
+    storage/
+    validation/
+  prisma/
+    schema.prisma
 ```
-
----
 
 ## 3. Hybrid Next.js Rendering Strategy
 
-The project implements a hybrid rendering paradigm tailored specifically for two different audiences: **Public Readers** and **Admin Editors**.
+The project is optimized for two audiences:
 
-| Characteristic | Public Website (`/app/(public)`) | Admin CMS (`/app/(admin)`) |
-| :--- | :--- | :--- |
-| **Primary Audience** | Search engine crawlers and general readers. | CMS administrators, editors, and super admins. |
-| **Component Paradigm** | **React Server Components (RSC)**. | **React Client Components (RCC)**. |
-| **Rendering Method** | Static Generation & ISR (Incremental Static Regeneration). | Dynamic client-side application. |
-| **Data Fetching** | Direct database reads via Prisma services. | TanStack Query calling JSON `/api/admin` endpoints. |
-| **SEO & Crawlability** | High priority. Metadata and open graph tags fully hydrated. | Non-critical. Hidden from search crawlers via `robots.txt`. |
-| **Interactivity** | Minimal. Limited to small Client Components (e.g., search bar). | Highly interactive form and state management (e.g., Rich Text Editor). |
+| Characteristic | Public Website | Admin CMS |
+| --- | --- | --- |
+| Audience | Readers, search crawlers, social previews | Editors and super admins |
+| Component model | React Server Components by default | Client Components where interaction requires it |
+| Rendering | Static generation, ISR, dynamic metadata | Dynamic authenticated app |
+| Data flow | Direct server-side services/cached repositories | TanStack Query calling `/api/admin/*` |
+| Security | Published public content only | Database-backed sessions, RBAC, CSRF, audit logs |
 
-### 3.1 Public Rendering Architecture (RSC & ISR)
-Public pages leverage Server Components to render the page layout and fetch data directly on the server:
-1. **Zero Client-Side JavaScript Overhead:** Server Components do not ship their component logic to the client, reducing bundle size.
-2. **On-Demand ISR Revalidation:** Public pages are cached statically. When an article is edited or published in the CMS, an on-demand revalidation trigger (e.g., `revalidatePath` or `revalidateTag`) is fired. The edge cache is updated instantly without rebuilding the entire application.
-3. **Data Fetching Efficiency:** Server Components read from the database using server-side service layers. They bypass the HTTP network boundary entirely for data queries.
+### Public Website
 
-### 3.2 Admin CMS Rendering Architecture (RCC & Route Handlers)
-Admin screens require rapid page transitions, complex form validations, drag-and-drop actions, and real-time validation states:
-1. **Interactive Client Shell:** The layout uses Client Components (`"use client"`) to manage state-heavy interfaces.
-2. **TanStack Query:** The CMS uses `@tanstack/react-query` to handle caching, background refetching, pagination states, and mutation feedback.
-3. **REST Route Handlers:** All mutations and queries are processed through standard Next.js Route Handlers (`app/api/*`). These enforce security, CSRF checks, request body validation, and role check boundaries.
+- Public pages render primary content on the server.
+- Public reads fetch directly from server-side services or cached repository functions.
+- Public pages must filter to published, active, non-deleted content.
+- `generateMetadata` uses the same cached data source as the page where possible.
+- Next.js Draft Mode is used for authenticated editorial preview and must not expose draft content to unauthenticated users.
+- Static/revalidated pages must explicitly configure cache behavior under Next.js 16+ defaults.
+
+### Admin CMS
+
+- Admin screens use Client Components for forms, editors, dialogs, tables, and state-heavy workflows.
+- Routine admin server state uses TanStack Query against `/api/admin/*`.
+- Admin Route Handlers enforce session validation, role checks, CSRF/cross-origin policy, input validation, business rules, audit logs, and revalidation jobs.
+- Heavy admin-only components such as rich text editors and media dialogs are dynamically imported.
+
+## 4. Production Reliability Decisions
+
+The architecture intentionally chooses boring, operable defaults:
+
+- PostgreSQL is the production database.
+- Production admin sessions are database-backed and revocable.
+- Auth checks live in Route Handlers and shared DAL/service helpers, not middleware alone.
+- Public content invalidation is durable through `RevalidationJob`, not only best-effort inline calls.
+- Audit logs are append-only at the application layer and have explicit write-failure behavior.
+- Production media uses durable object storage, preferably with presigned direct uploads.
+- Operations require structured logs, request IDs, metrics, alerts, health checks where needed, migration docs, seed docs, and backup/restore expectations.

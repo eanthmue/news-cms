@@ -17,6 +17,8 @@ By default, all components in the Next.js App Router are Server Components unles
   - **Async Routing Parameters:** Route parameters (`params`) and search query parameters (`searchParams`) in layouts, page components, and metadata generation are Promises. Await them before reading their properties (e.g., `const { slug } = await params;`).
   - **Direct Data Fetching:** Fetch database data directly using database services (e.g., `features/articles/services/get-article.ts`) via Prisma client. Bypassing HTTP REST requests speeds up TTFB (Time to First Byte).
   - **Deduplication:** Wrap data-fetching calls in React `cache()` if the same data is needed in both `generateMetadata` and the component render.
+  - **Published Content Boundary:** Public services must filter to published, active, non-deleted content unless authenticated Draft Mode is explicitly enabled.
+  - **Draft Preview:** Use Next.js Draft Mode for authenticated editorial preview. Draft preview must be short-lived, visibly indicated in the UI, and unavailable to unauthenticated public users.
 
 ### 1.2 React Client Components (RCC)
 Marked with the `"use client"` directive at the very top of the file.
@@ -56,6 +58,17 @@ export default function AdminArticleForm() {
   );
 }
 ```
+
+---
+
+## 2.1 Streaming, Loading UI, and PPR Evaluation
+
+Public pages must render meaningful primary content in the initial HTML. Loading states are acceptable for below-the-fold or secondary regions, not as a replacement for article/listing content.
+
+- Add route-level `loading.tsx` only where it improves navigation or slow secondary data loading.
+- Use React Suspense for below-the-fold related articles, ads, analytics widgets, or other secondary sections.
+- Evaluate Partial Prerendering only for pages with a genuinely static shell plus dynamic islands; do not add it as ceremony.
+- Admin pages may use richer loading skeletons because they are authenticated app workflows, but they still need empty, error, and permission-denied states.
 
 ---
 

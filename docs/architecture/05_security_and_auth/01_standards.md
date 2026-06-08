@@ -1,68 +1,81 @@
 # Security and Authentication Standards
 
-This document defines the security parameters, access controls, and vulnerability mitigation strategies implemented across the News CMS platform.
+This document defines production security decisions for the News CMS. Middleware is a convenience guard; Route Handlers and shared authorization/data-access helpers are the real security boundary.
 
----
+## 1. Authentication and Session Management
 
-## 1. Authentication & Session Management
+- **Auth framework:** Use Auth.js/NextAuth.js or another approved production auth library.
+- **Admin session strategy:** Production admin sessions are database-backed and revocable. Long-lived stateless JWT-only admin sessions are not allowed because role changes, disabled users, lockouts, MFA resets, and compromised tokens must take effect before token expiry.
+- **Cookie settings:** Session cookies are HTTP-only, Secure in production, SameSite=Lax or Strict where compatible, and scoped narrowly to the app domain.
+- **Session validation:** Every admin request verifies that the session exists, is not expired, is not revoked, belongs to an active user, and matches the user's current `sessionVersion`.
+- **Session lifetime:** Define both an inactivity timeout and an absolute maximum lifetime before production launch. Sensitive actions require recent re-authentication.
+- **Revocation triggers:** Disablement, password reset, role change, MFA reset, suspected compromise, and explicit logout revoke or invalidate existing sessions.
+- **Password policy:** Use length-first admin passwords with a minimum of 15 characters for password-only accounts, no arbitrary composition-only rules, no truncation below 64 characters, and common/breached-password blocking where practical.
+- **Password hashing:** Use Argon2id or bcrypt with production-safe cost settings.
+- **Account protection:** Rate limit login, password reset, invite acceptance, and upload endpoints by IP and actor where possible. Lock accounts temporarily after repeated failed login attempts.
+- **MFA:** `SUPER_ADMIN` accounts require MFA before production launch; all admin accounts must support MFA enrollment. Prefer WebAuthn/passkeys or TOTP over SMS.
 
-To protect the administrative boundaries, the system uses strict session controls:
+## 2. RBAC and Authorization Boundaries
 
-- **Auth Framework:** Implemented using **NextAuth.js / Auth.js** (or similar approved library).
-- **Session Tokens:** Sessions are persisted via cryptographically signed, JSON Web Tokens (JWT) or database sessions, stored in **HTTP-only, Secure (production-only), SameSite=Lax** cookies to protect against Cross-Site Scripting (XSS) and Session Hijacking.
-- **Password Policies:**
-  - Password hashing uses **bcrypt** or **Argon2id** with high-cost parameters.
-  - Passwords must meet modern length-first rules (minimum 12 characters).
-  - Password resetting utilizes expiring, single-use, cryptographically hashed tokens sent via email.
-- **Account Protection:**
-  - **Rate Limiting:** IP and user-based request rate limiting is enforced on the login endpoint.
-  - **Account Lockout:** Accounts are temporarily locked (`lockedUntil` timestamp) after 5 consecutive failed login attempts.
+Supported roles:
 
----
+- **`SUPER_ADMIN`:** Full administrative rights, including user management, global settings, audit log access, and destructive content operations.
+- **`EDITOR`:** Content workflow rights for articles, categories, tags, and media as explicitly allowed. Editors cannot manage users, audit logs, MFA settings, or global site settings.
 
-## 2. Role-Based Access Control (RBAC) & Authorization Boundaries
+Authorization rules:
 
-The platform supports distinct user roles with varying permissions:
-- **`SUPER_ADMIN`:** Full system rights, including creating/modifying admin accounts, altering global site settings, managing layouts, and deleting content.
-- **`EDITOR`:** Can create, edit, categorize, tag, and publish articles, but cannot access user settings, audit logs, or global site settings.
+- Next.js middleware may redirect unauthenticated users away from `/admin/*`, but middleware is not a trusted security boundary.
+- Every `/api/admin/*` Route Handler must validate session, user status, role, CSRF/Origin policy, and request input before database mutation.
+- A shared DAL/service authorization boundary must guard admin and non-public data access. Route Handlers should call this boundary rather than scattering raw Prisma access and role checks.
+- Client-side role checks are UX hints only and must never grant access.
+- Privileged actions such as role changes, user deletion, MFA changes, settings updates, and destructive content deletion require recent re-authentication.
 
-### The Authorization Rule
-> [!IMPORTANT]
-> **Next.js Middleware is not the primary security boundary.** Middleware (`middleware.ts`) must only be used as a UX convenience (redirecting unauthenticated users away from `/admin/*` views). The true authorization and role checks must be explicitly performed inside:
-> 1. **Route Handlers (`app/api/*`):** Validate session tokens and verify user roles before executing any CRUD operations.
-> 2. **Data Access Layer (DAL):** Enforce tenant or user boundaries at the service layer level before querying the database.
+## 3. CSRF and Cross-Origin Mutation Defense
 
----
+Cookie-authenticated admin mutations must fail closed.
 
-## 3. Cross-Site Scripting (XSS) & Content Sanitization
+- State-changing methods (`POST`, `PUT`, `PATCH`, `DELETE`) validate the request before reading or mutating business data.
+- Preferred control is an explicit CSRF token tied to the authenticated admin session.
+- Origin/Referer and Fetch Metadata checks are required defense-in-depth where compatible with deployment.
+- Missing or untrusted `Origin`/`Referer` on browser mutation requests must be rejected unless a documented non-browser integration path exists.
+- Allowed origins must be configured explicitly for production, staging, local development, and preview environments.
+- Reverse proxy and CDN behavior must be documented: which `X-Forwarded-*` headers are trusted, where TLS terminates, and which canonical host is used for validation.
+- SameSite cookies alone are not sufficient as the complete CSRF design.
 
-Rich-text content created by editors via the WYSIWYG editor (e.g., TipTap) is stored as HTML or structured JSON. Because this content is rendered directly on the public reader-facing site, rigorous sanitization is required:
+## 4. Security Headers
 
-- **Server-Side Sanitization:** All editor-submitted HTML must be parsed and sanitized on the server before database storage or public rendering. A library like `dompurify` (running under a server environment) or `isomorphic-dompurify` must be used to strip:
-  - `javascript:` URIs.
-  - Inline event handlers (`onload`, `onerror`, `onclick`).
-  - Unapproved HTML tags (`<script>`, `<object>`, `<iframe>` except from white-listed providers like YouTube).
-- **Link Formatting:** External hyperlinks in articles must automatically append `target="_blank" rel="noopener noreferrer"` to prevent Tabnabbing vulnerabilities.
+Production responses must configure and test:
 
----
+- Content-Security-Policy aligned with rich text embeds, media hosts, analytics, and scripts.
+- `frame-ancestors` or equivalent clickjacking protection.
+- Strict-Transport-Security.
+- `X-Content-Type-Options: nosniff`.
+- Referrer-Policy.
+- Conservative Permissions-Policy.
 
-## 4. Cross-Site Request Forgery (CSRF) Protection
+Changes that add embeds, external media, analytics, or third-party scripts must update and retest the CSP.
 
-Because session cookies are transmitted automatically by the browser, mutations are protected against CSRF attacks:
-- **SameSite Cookie Attribute:** Cookies are configured with `SameSite=Lax` or `SameSite=Strict`.
-- **Fetch Metadata & Origin Checks:** Route Handlers executing mutations (`POST`, `PUT`, `DELETE`, `PATCH`) must validate the `Origin` and `Referer` headers against the system's configured host domain to block cross-origin requests.
+## 5. Rich Text and XSS Protection
 
----
+Editor-authored rich text is untrusted even when the editor is authenticated.
 
-## 5. Media Upload & Asset Security
+- Store TipTap content as structured JSON.
+- Convert JSON to HTML with a controlled server-side renderer.
+- Sanitize generated HTML before public rendering or at write time with an allowlist of tags, attributes, protocols, and embed providers.
+- Strip `javascript:`, unsafe `data:` URLs, event handlers, `<script>`, `<style>`, unapproved iframes, and unknown attributes.
+- External links opened in a new tab must use `rel="noopener noreferrer"`.
+- The sanitizer policy must be tested with malicious fixtures.
 
-Media uploads represent a significant attack surface (remote code execution, file system overwrite). The system mitigates these risks with the following rules:
+## 6. Media Upload and Asset Security
 
-- **Validation Checks:**
-  - **File Size:** Enforce strict size limits depending on media types (e.g., images < 5MB).
-  - **MIME & Signatures:** Validate file MIME types against an allowlist (e.g., `image/jpeg`, `image/png`, `image/webp`). Verify file headers (magic numbers/signatures) rather than relying solely on file extensions.
-- **Storage Isolation:**
-  - Original filenames are never used to determine the file key on S3 storage. Instead, filenames are sanitized and UUIDs are generated server-side.
-  - The storage bucket is isolated from the application servers, preventing execution of uploaded scripts.
-- **Referential Integrity:**
-  - A media asset cannot be deleted from the database/storage bucket if it is actively referenced inside a published `Article`'s content or is set as a featured image.
+Media uploads are a high-risk boundary.
+
+- Production media storage must use S3-compatible object storage or another durable external provider. Local disk storage is development-only.
+- Prefer presigned direct-to-object-storage uploads. The server validates the requested upload, issues a constrained presigned URL, confirms object metadata after upload, and only then persists the media row.
+- If proxy uploads are used, document size, timeout, memory, and concurrency limits.
+- Allow only JPG, JPEG, PNG, and WebP unless a task explicitly expands support.
+- Validate extension, MIME type, file signature, size, and image dimensions.
+- Generate trusted storage keys server-side. Original filenames are sanitized for display only.
+- Strip or normalize EXIF and other sensitive image metadata where practical.
+- Enable malware or provider-side object scanning before production launch where supported by the storage stack.
+- Prevent deletion of media referenced by published content unless reassignment or explicit confirmation rules are implemented.

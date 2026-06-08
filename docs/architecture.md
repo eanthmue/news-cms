@@ -146,8 +146,8 @@ type ApiFailure = {
 2.  **Role Verification:** Server-side roles are strictly checked at the API handler level and in a shared DAL/service authorization boundary where database access occurs. Middleware is never treated as the only security boundary.
 3.  **Conflict Prevention:** Duplicate slug requests must fail with a `409 Conflict` error.
 4.  **CSRF Protection:** Cookie-authenticated admin mutations must pass explicit CSRF validation or documented Origin/Fetch Metadata checks before mutation.
-5.  **Revalidation Triggers:** Successful database modifications of content must trigger on-demand Next.js path or tag revalidation (`revalidatePath`, `revalidateTag`) to propagate updates to the public site.
-6.  **Audit Logs:** Critical actions (publishing, modifying settings, user invites, deletes) must write an immutable audit trail in the `AuditLog` table.
+5.  **Durable Revalidation:** Successful public-content mutations must enqueue durable revalidation work in the same database transaction, then execute idempotent `revalidatePath`/`revalidateTag` attempts with retry and dead-letter handling.
+6.  **Audit Logs:** Critical actions (publishing, modifying settings, user invites, deletes) must write an append-only audit trail with restricted access, redaction, retention, and write-failure behavior.
 
 ---
 
@@ -204,9 +204,9 @@ The system is engineered to meet Core Web Vitals requirements (Targeting Lightho
 *   **Core Web Vitals Optimizations:**
     *   **Images:** Rendered via Next.js `<Image />` component with custom dimensions, format conversions (WebP), and alt tags parsed directly from S3 media metadata.
     *   **Fonts:** Loaded using `next/font` for local caching and Layout Shift (CLS) reduction.
-*   **On-Demand ISR Revalidation:**
+*   **Durable ISR Revalidation:**
     *   Homepage, article pages, and listings are statically generated.
-    *   When an editor changes the status of an article (published, draft, archived) or updates navigation menus, the CMS triggers revalidation tags/paths. This keeps page loads sub-second while ensuring updates are reflected almost instantly.
+    *   When an editor changes the status of an article (published, draft, archived) or updates navigation menus, the CMS records affected paths/tags in a durable revalidation job and executes idempotent retries until the public cache is refreshed or a dead-letter alert is raised.
 *   **Next.js 16+ Caching Defaults:**
     *   `fetch` requests and GET Route Handlers are uncached by default.
     *   To enable caching for statically generated content and to leverage the Next.js cache, components and route handlers must explicitly opt-in (e.g. using `{ cache: 'force-cache' }` or configuring revalidation tags).
