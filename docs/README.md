@@ -7,7 +7,6 @@ Use this file to decide which project documents are authoritative.
 - `../AGENTS.md` - primary project instructions for agents.
 - `production-ready-agent-harness.md` - production architecture, security, data, SEO, testing, and operations requirements.
 - `production-readiness-task-plan.md` - production task definitions for `P001` through `P012`.
-- `task_tracker.md` - canonical status tracker for both production readiness tasks and MVP feature tasks.
 - `quality-score.md` - current quality/readiness signal summary for agents.
 - `tech-debt-tracker.md` - known debt that should stay visible across agent runs.
 - `exec-plans/` - durable active and completed execution plans for complex work.
