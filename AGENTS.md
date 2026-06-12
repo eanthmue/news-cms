@@ -10,7 +10,7 @@ A news website with a CMS built using Next.js 16+ (App Router), TypeScript, Tail
   - Use a `/features` directory to colocate business logic (components, hooks, types, services) by domain.
   - Use **Route Groups** in the `/app` directory (e.g., `(admin)`, `(public)`) to organize routes.
   - Keep `/components/ui` for shared, business-agnostic UI primitives (shadcn/ui).
-- **Production Harness:** This file is the main authority for agent behavior. For production-ready work, agents must also follow `docs/production-ready-agent-harness.md` and `docs/production-readiness-task-plan.md`.
+- **Production Guidelines:** This file is the main authority for agent behavior. For production-ready work, agents must also follow `docs/architecture/production-ready-guidelines.md` and `docs/specs/production-readiness-task-plan.md`.
 - **Component Pattern:** Use a hybrid model.
   - Public reader-facing pages should use Server Components, static generation/ISR, and Metadata API where appropriate.
   - Admin CMS screens should use Client Components for interactive UI.
@@ -71,7 +71,7 @@ Follow the Vertical Slice structure:
 
 ## Workflow
 
-1. Refer to `docs/task_tracker.md` for the current task.
-2. Read `docs/production-ready-agent-harness.md` and `docs/production-readiness-task-plan.md` before production-readiness work.
-3. Read the corresponding task file in `docs/tasks/` for MVP task IDs, or the matching production-readiness section in `docs/production-readiness-task-plan.md` for production task IDs.
+1. Refer to `docs/specs/task_tracker.md` for the current task.
+2. Read `docs/architecture/production-ready-guidelines.md` and `docs/specs/production-readiness-task-plan.md` before production-readiness work.
+3. Read the matching production-readiness section in `docs/specs/production-readiness-task-plan.md` for production task IDs.
 4. Update the task tracker status once a task is completed.

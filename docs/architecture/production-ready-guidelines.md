@@ -1,8 +1,8 @@
-# Production-Ready Agent Harness
+# Production-Ready Agent Guidelines
 
-This document expands the production-ready implementation standards referenced by `AGENTS.md`. Use `AGENTS.md` as the main authority for agent behavior, and use this harness for production architecture, security, data, SEO, testing, and operations requirements.
+This document expands the production-ready implementation standards referenced by `AGENTS.md`. Use `AGENTS.md` as the main authority for agent behavior, and use these guidelines for production architecture, security, data, SEO, testing, and operations requirements.
 
-The existing MVP specs remain useful feature context. When older specs or task files conflict with the production standards here, follow the current instructions in `AGENTS.md` and this harness, then note the conflict in the implementation summary.
+The existing MVP specs remain useful feature context. When older specs or task files conflict with the production standards here, follow the current instructions in `AGENTS.md` and these guidelines, then note the conflict in the implementation summary.
 
 ## 1. Product Target
 
@@ -355,17 +355,16 @@ When an agent starts a task:
 
 1. Read `AGENTS.md`.
 2. Read this document.
-3. Read `docs/task_tracker.md`.
+3. Read `docs/specs/task_tracker.md`.
 4. Read the specific task requirements:
-   - For MVP task IDs, read the matching file under `docs/tasks/`.
-   - For production-readiness task IDs, read the matching section in `docs/production-readiness-task-plan.md`.
+   - For production-readiness task IDs, read the matching section in `docs/specs/production-readiness-task-plan.md`.
 5. For complex or multi-turn work, create or update an execution plan in `docs/exec-plans/active/`.
 6. Inspect existing implementation before editing.
 7. Preserve existing user changes.
 8. Implement the smallest production-ready change that satisfies the task.
 9. Add or update tests proportional to the risk.
-10. Run targeted verification, including `pnpm verify:harness` when architecture, API, public rendering, or harness docs change.
-11. Update `docs/quality-score.md` or `docs/tech-debt-tracker.md` when the task changes readiness signals or known debt.
+10. Run targeted verification, including `npm run verify:guidelines` when architecture, API, public rendering, or guidelines docs change.
+11. Update `docs/architecture/quality-score.md` or `docs/architecture/tech-debt-tracker.md` when the task changes readiness signals or known debt.
 12. Update the task tracker only when the task is genuinely complete.
 
 When a task conflicts with this document, follow this document and note the conflict in the implementation summary.
@@ -383,7 +382,7 @@ A task is done only when:
 - Cache/revalidation behavior is correct where relevant.
 - Tests or documented manual verification cover the main behavior.
 - Lint/type/test commands relevant to the task pass, or failures are documented.
-- `docs/task_tracker.md` is updated.
+- `docs/specs/task_tracker.md` is updated.
 
 ## 16. Required Production Task Additions
 

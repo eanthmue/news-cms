@@ -1,31 +1,53 @@
 # Documentation Index
 
-Use this file to decide which project documents are authoritative.
+Use this file to locate authoritative documentation for the News CMS project.
 
 ## Authoritative Guardrails
 
-- `../AGENTS.md` - primary project instructions for agents.
-- `production-ready-agent-harness.md` - production architecture, security, data, SEO, testing, and operations requirements.
-- `production-readiness-task-plan.md` - production task definitions for `P001` through `P012`.
-- `quality-score.md` - current quality/readiness signal summary for agents.
-- `tech-debt-tracker.md` - known debt that should stay visible across agent runs.
-- `exec-plans/` - durable active and completed execution plans for complex work.
+- [AGENTS.md](file:///e:/NextJS/news-cms/AGENTS.md) - Primary project instructions and coding rules.
 
-## Feature Context
+---
 
-- `news_website_cms_basic_specs.md` - original product scope and MVP feature context.
-- `specs/overview.md` - functional and technical specification index for the public frontend and admin CMS.
-- `tasks/` - detailed MVP task files `T001` through `T020`.
+## 1. Product Requirements (PRD)
 
-When these files conflict with the production harness, follow `AGENTS.md` and `production-ready-agent-harness.md`.
+Product-level requirements defining the functional scope and targets:
 
-## Testing Notes
+- [prd/01_mvp_product_requirements.md](file:///e:/NextJS/news-cms/docs/prd/01_mvp_product_requirements.md) - Original MVP feature scope and context.
+- [prd/02_production_product_targets.md](file:///e:/NextJS/news-cms/docs/prd/02_production_product_targets.md) - Quality, security, and performance targets for a production-ready launch.
 
-- `testing/api-test-coverage.md` - API test coverage notes and remaining test work.
+---
 
-## Archived Material
+## 2. System Specifications (Specs)
 
-- `archive/high-performance-client-rest.md`
-- `archive/performance-audit.md`
+Detailed functional specifications and project execution maps:
 
-Archived files are historical context only. Do not use them as implementation guidance unless a current task explicitly asks for historical comparison.
+- [specs/overview.md](file:///e:/NextJS/news-cms/docs/specs/overview.md) - Index for functional specifications.
+- **Public Frontend (`docs/specs/01_public_frontend/`):** Detailed specifications for public pages, SEO, and responsive design.
+- **Admin CMS (`docs/specs/02_admin_cms/`):** Detailed specifications for editorial CRUD, authentication, rich text editing, and settings.
+- **Cross-Cutting Concerns (`docs/specs/03_phasing_and_nfr/`):** Non-functional requirements, phasing, and page routes map.
+- [specs/production-readiness-task-plan.md](file:///e:/NextJS/news-cms/docs/specs/production-readiness-task-plan.md) - Roadmap and task plans for production-readiness milestones (`P001` through `P012`).
+- [specs/task_tracker.md](file:///e:/NextJS/news-cms/docs/specs/task_tracker.md) - The active checklist to monitor the progress of production readiness.
+
+---
+
+## 3. Technical Architecture (Architecture)
+
+System design, guidelines, standards, and operational details:
+
+- [architecture/overview.md](file:///e:/NextJS/news-cms/docs/architecture/overview.md) - System overview, Vertical Slice Architecture patterns, and hybrid rendering strategy.
+- [architecture/production-ready-guidelines.md](file:///e:/NextJS/news-cms/docs/architecture/production-ready-guidelines.md) - Standards for security, data model, APIs, Core Web Vitals, and testing.
+- [architecture/quality-score.md](file:///e:/NextJS/news-cms/docs/architecture/quality-score.md) - Engineering quality signals, test coverage, and validation state.
+- [architecture/tech-debt-tracker.md](file:///e:/NextJS/news-cms/docs/architecture/tech-debt-tracker.md) - Ongoing list of technical debt items and deprecations.
+- [architecture/testing/api-test-coverage.md](file:///e:/NextJS/news-cms/docs/architecture/testing/api-test-coverage.md) - API test coverage logs and checklist.
+
+### Historical Context & Archive
+- [architecture/archive/high-performance-client-rest.md](file:///e:/NextJS/news-cms/docs/architecture/archive/high-performance-client-rest.md) - Past client REST concept (deprecated in favor of hybrid RSC model).
+- [architecture/archive/performance-audit.md](file:///e:/NextJS/news-cms/docs/architecture/archive/performance-audit.md) - Early performance checks.
+
+---
+
+## 4. Development Execution Plans
+
+- [exec-plans/README.md](file:///e:/NextJS/news-cms/docs/exec-plans/README.md) - Explains how to use developer execution plans.
+- `docs/exec-plans/active/` - In-progress engineering plans.
+- `docs/exec-plans/completed/` - Completed engineering plans.

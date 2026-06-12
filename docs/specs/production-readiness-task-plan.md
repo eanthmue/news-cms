@@ -1,6 +1,6 @@
 # Production Readiness Task Plan
 
-This plan extends the existing task tracker for a production-ready News CMS. Use it with `docs/production-ready-agent-harness.md`.
+This plan extends the existing task tracker for a production-ready News CMS. Use it with [production-ready-guidelines.md](../architecture/production-ready-guidelines.md).
 
 Do not mark a production-readiness task complete until its verification steps pass or the remaining risk is explicitly documented.
 

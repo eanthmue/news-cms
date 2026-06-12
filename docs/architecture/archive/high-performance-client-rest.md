@@ -1,6 +1,6 @@
 # Archived: High-Performance Next.js Pure Client and REST API Architecture
 
-> Historical context only. This document conflicts with the current hybrid production architecture in `docs/production-ready-agent-harness.md`, which requires server-rendered public pages and Route Handler boundaries for admin/API use cases. Do not use this file as current implementation guidance.
+> Historical context only. This document conflicts with the current hybrid production architecture in `docs/architecture/production-ready-guidelines.md`, which requires server-rendered public pages and Route Handler boundaries for admin/API use cases. Do not use this file as current implementation guidance.
 
 This document outlines the industry gold standard for building high-performance Next.js applications using a strictly decoupled architecture: **Pure Client Components** for the frontend and **Next.js Route Handlers** for a pure REST API.
 

@@ -14,7 +14,7 @@ function read(relativePath) {
 
 function assertExists(relativePath) {
   if (!existsSync(path.join(root, relativePath))) {
-    fail(`Missing required harness artifact: ${relativePath}`);
+    fail(`Missing required guidelines artifact: ${relativePath}`);
   }
 }
 
@@ -37,11 +37,11 @@ function walk(dir) {
 [
   "AGENTS.md",
   "docs/README.md",
-  "docs/production-ready-agent-harness.md",
-  "docs/production-readiness-task-plan.md",
-  "docs/task_tracker.md",
-  "docs/quality-score.md",
-  "docs/tech-debt-tracker.md",
+  "docs/architecture/production-ready-guidelines.md",
+  "docs/specs/production-readiness-task-plan.md",
+  "docs/specs/task_tracker.md",
+  "docs/architecture/quality-score.md",
+  "docs/architecture/tech-debt-tracker.md",
   "docs/exec-plans/README.md",
   "docs/exec-plans/active/.gitkeep",
   "docs/exec-plans/completed/.gitkeep",
@@ -49,9 +49,9 @@ function walk(dir) {
 
 const agents = existsSync(path.join(root, "AGENTS.md")) ? read("AGENTS.md") : "";
 for (const requiredReference of [
-  "docs/task_tracker.md",
-  "docs/production-ready-agent-harness.md",
-  "docs/production-readiness-task-plan.md",
+  "docs/specs/task_tracker.md",
+  "docs/architecture/production-ready-guidelines.md",
+  "docs/specs/production-readiness-task-plan.md",
 ]) {
   if (!agents.includes(requiredReference)) {
     fail(`AGENTS.md must reference ${requiredReference}`);
@@ -59,8 +59,8 @@ for (const requiredReference of [
 }
 
 const packageJson = JSON.parse(read("package.json"));
-if (packageJson.scripts?.["verify:harness"] !== "node scripts/verify-harness.mjs") {
-  fail('package.json must define "verify:harness": "node scripts/verify-harness.mjs"');
+if (packageJson.scripts?.["verify:guidelines"] !== "node scripts/verify-guidelines.mjs") {
+  fail('package.json must define "verify:guidelines": "node scripts/verify-guidelines.mjs"');
 }
 
 if (!existsSync(path.join(root, ".github/workflows/ci.yml"))) {
@@ -98,21 +98,21 @@ for (const file of walk("app/(public)").filter((file) => file.endsWith(".tsx")))
   }
 }
 
-const harness = existsSync(path.join(root, "docs/production-ready-agent-harness.md"))
-  ? read("docs/production-ready-agent-harness.md")
+const guidelines = existsSync(path.join(root, "docs/architecture/production-ready-guidelines.md"))
+  ? read("docs/architecture/production-ready-guidelines.md")
   : "";
 for (const heading of ["Agent Implementation Workflow", "Definition of Done"]) {
-  if (!harness.includes(heading)) {
-    fail(`Production harness must include ${heading}`);
+  if (!guidelines.includes(heading)) {
+    fail(`Production guidelines must include ${heading}`);
   }
 }
 
 if (failures.length > 0) {
-  console.error("Harness verification failed:");
+  console.error("Guidelines verification failed:");
   for (const failure of failures) {
     console.error(`- ${failure}`);
   }
   process.exit(1);
 }
 
-console.log("Harness verification passed.");
+console.log("Guidelines verification passed.");

@@ -1,6 +1,6 @@
 # Archived: Performance Audit for Pure Client and REST API Architecture
 
-> Historical context only. This audit is based on `docs/archive/high-performance-client-rest.md`, which conflicts with the current production harness. Use `docs/production-ready-agent-harness.md` and `docs/production-readiness-task-plan.md` for current work.
+> Historical context only. This audit is based on `docs/architecture/archive/high-performance-client-rest.md`, which conflicts with the current production guidelines. Use `docs/architecture/production-ready-guidelines.md` and `docs/specs/production-readiness-task-plan.md` for current work.
 
 Based on a review of the codebase against `docs/archive/high-performance-client-rest.md`, here are the missing implementations and a plan on how to add or fix them.
 
